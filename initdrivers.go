@@ -2,9 +2,10 @@ package main
 
 import (
 	"fmt"
-	"webRemotedektop/drivers"
-	"webRemotedektop/drivers/rdpDriver"
-	"webRemotedektop/drivers/sshDriver"
+
+	"github.com/Archie1978/regate/drivers"
+	"github.com/Archie1978/regate/drivers/rdpDriver"
+	"github.com/Archie1978/regate/drivers/sshDriver"
 )
 
 func init() {

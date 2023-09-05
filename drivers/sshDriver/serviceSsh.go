@@ -4,10 +4,13 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"webRemotedektop/drivers"
+	"net/url"
+	"strconv"
+
+	"github.com/Archie1978/regate/drivers"
+	"github.com/mitchellh/mapstructure"
 
 	"github.com/golang/glog"
-	"github.com/mitchellh/mapstructure"
 
 	"golang.org/x/crypto/ssh"
 
@@ -44,10 +47,24 @@ func (processSSh *ProcessSsh) New() drivers.DriverRP {
 	return &ProcessSsh{}
 }
 
-func (processSSh *ProcessSsh) Start(chanelWebSocket chan interface{}, numeroSession int, msgConnectInterface interface{}) {
+func (processSSh *ProcessSsh) Start(chanelWebSocket chan interface{}, numeroSession int, urlString string) {
 	processSSh.chanelWebSocket = chanelWebSocket
 	processSSh.numeroSession = numeroSession
-	mapstructure.Decode(msgConnectInterface, &processSSh.msgConnect)
+
+	u, err := url.Parse(urlString)
+	if err == nil {
+		// Decode URL
+		processSSh.msgConnect.Ip = u.Hostname()
+		processSSh.msgConnect.Port, _ = strconv.Atoi(u.Port())
+		if processSSh.msgConnect.Port == 0 {
+			processSSh.msgConnect.Port = 22
+		}
+		if u.User != nil {
+			processSSh.msgConnect.Username = u.User.Username()
+			processSSh.msgConnect.Password, _ = u.User.Password()
+		}
+	}
+
 }
 
 func (processSSh *ProcessSsh) startSSh() {
@@ -89,8 +106,8 @@ func (processSSh *ProcessSsh) startSSh() {
 
 	modes := ssh.TerminalModes{
 		ssh.ECHO:          1,
-		ssh.TTY_OP_ISPEED: 14400,
-		ssh.TTY_OP_OSPEED: 14400,
+		ssh.TTY_OP_ISPEED: 1500000,
+		ssh.TTY_OP_OSPEED: 1500000,
 	}
 
 	// Create Pty

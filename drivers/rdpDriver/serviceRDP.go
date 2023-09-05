@@ -5,10 +5,13 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net/url"
+	"strings"
 	"time"
-	"webRemotedektop/drivers"
 
+	"github.com/Archie1978/regate/drivers"
 	"github.com/mitchellh/mapstructure"
+
 	"github.com/tomatome/grdp/glog"
 	"github.com/tomatome/grdp/protocol/pdu"
 )
@@ -94,10 +97,8 @@ type MsgConnect struct {
 func (processRDP *ProcessRdp) New() drivers.DriverRP {
 	return &ProcessRdp{}
 }
-func (processRDP *ProcessRdp) startRDP(chanelWebSocket chan interface{}, msgOption interface{}) {
-	var msgConnect MsgConnect
-	mapstructure.Decode(msgOption, &msgConnect)
-
+func (processRDP *ProcessRdp) startRDP(chanelWebSocket chan interface{}) {
+	msgConnect := &processRDP.msgConnect
 	if msgConnect.Width == 0 {
 		msgConnect.Width = 800
 	}
@@ -195,10 +196,21 @@ type ProcessRdp struct {
 	msgConnect      MsgConnect
 }
 
-func (processRDP *ProcessRdp) Start(chanelWebSocket chan interface{}, numeroSession int, msg interface{}) {
+func (processRDP *ProcessRdp) Start(chanelWebSocket chan interface{}, numeroSession int, urlString string) {
 	processRDP.numeroSession = numeroSession
 	processRDP.chanelWebSocket = chanelWebSocket
-	mapstructure.Decode(msg, &processRDP.msgConnect)
+
+	u, err := url.Parse(urlString)
+	if err == nil {
+		domainUser := strings.Split(u.User.Username(), "/")
+		processRDP.msgConnect.Domain = domainUser[0]
+		if len(domainUser) > 1 {
+			processRDP.msgConnect.Username = domainUser[1]
+		}
+		processRDP.msgConnect.Password, _ = u.User.Password()
+		processRDP.msgConnect.Ip = u.Host
+	}
+
 	glog.Info("start driver RDP:", processRDP.msgConnect)
 }
 func (processRDP *ProcessRdp) Close() {
@@ -223,7 +235,7 @@ func (processRDP *ProcessRdp) Process(msg interface{}) {
 		processRDP.msgConnect.Height = message.Screen.Height
 
 		glog.Info("connect", processRDP.msgConnect)
-		processRDP.startRDP(processRDP.chanelWebSocket, processRDP.msgConnect)
+		processRDP.startRDP(processRDP.chanelWebSocket)
 
 	case "mouse":
 		msgMouse := message.ScanCode

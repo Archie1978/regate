@@ -4,14 +4,18 @@ class Ssh {
         this.terminal=null;
         this.terminalVue=null;
     }
+
+    // Driver name
     get name(){
         return "sshDriver"
     }
+
+    // Add tab
     get insertTab(){
-        return `
-        
-        `;
+        return ``;
     }
+
+    // Start UI console terminal for connexion
     get typeUI(){
         return "terminal"
     }
@@ -19,6 +23,7 @@ class Ssh {
         return "ssh"
     }
 
+    // connect Console with sh ssh
     set(eventBus,terminalVue,terminal){
         this.terminal=terminal;
         this.terminalVue=terminalVue;
@@ -114,6 +119,7 @@ class Ssh {
         });
     }
 
+    // Cursor function
     keydown(e){
         console.log("TerminalSsh: keydown",this.terminal,e,document.getElementById(this.terminalVue.id));
         return false;
@@ -128,6 +134,27 @@ class Ssh {
             document.getElementById(this.terminalVue.id).querySelector("textarea").focus();
         }
     }
+
+    // fonction option configuration return string: Error or object for configuration connection WS
+    static encodeConfiguration(dataForm){
+        if(dataForm.user==""||dataForm.user==undefined) {
+            return ("user is empty")
+        }
+        if(dataForm.host==""||dataForm.host==undefined) {
+            return ("host is empty")
+        }
+        if(dataForm.port==""||dataForm.port==undefined) {
+            return ("port is empty")
+        }
+        let encodedSchema = encodeURIComponent("ssh");
+        let encodedAuthority = `${encodeURIComponent(dataForm.user)}:${encodeURIComponent(dataForm.password)}@${encodeURIComponent(dataForm.host)}:${dataForm.port}`;
+    
+        return {
+            Name: dataForm.name,
+            URL:`${encodedSchema}://${encodedAuthority}`
+        }
+    }
+    
 }
 
 

@@ -11,7 +11,7 @@ var listDriver map[string]DriverRP
 type DriverRP interface {
 	New() DriverRP
 	Process(msg interface{})
-	Start(chanelWebSocket chan interface{}, numeroSession int, msgOption interface{})
+	Start(chanelWebSocket chan interface{}, numeroSession int, urlString string)
 	Close()
 
 	GetCodeJavascript() (content string)

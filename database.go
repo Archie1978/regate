@@ -44,8 +44,7 @@ type Server struct {
 	ServerGroupID uint
 	ServerGroup   *ServerGroup
 
-	URL        string
-	OptionJSON string
+	URL string
 }
 
 type Servers []*Server

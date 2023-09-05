@@ -6,12 +6,11 @@ import (
 	"log"
 	"math/rand"
 	"net/http"
-	"net/url"
 	"reflect"
 	"strconv"
 	"strings"
 
-	"webRemotedektop/drivers"
+	"github.com/Archie1978/regate/drivers"
 
 	"github.com/gin-contrib/static"
 	"github.com/gin-gonic/gin"
@@ -33,7 +32,7 @@ func initService(unauthorized *gin.Engine) {
 	})
 	router.GET("/addon-local.js", funcRouterJavascriptRM)
 	//router.Static("/", "./www/web-remotedektop/dist/js")
-	router.Use(static.Serve("/", static.LocalFile("./www/web-remotedektop/dist", false)))
+	router.Use(static.Serve("/", static.LocalFile("./www/regate/dist", false)))
 
 	// Listen and serve on 0.0.0.0:8088
 	router.Run(":8088")
@@ -160,13 +159,68 @@ func wshandler(w http.ResponseWriter, r *http.Request) {
 
 			case "LISTSERVER":
 				// List of serveur into group
-
 				serverGroup, err := GetServerGroupComposit()
 				if err != nil {
 					glog.Error("Error ServerGroup:", err)
 				}
 				chanelWebSocket <- MessageRTM{Command: "LISTSERVER", Msg: serverGroup}
 
+			case "SaveConnection":
+				// Save connection
+				fmt.Println("SaveConnexion", messageRTM)
+				if options, ok := messageRTM.Msg.(map[string]interface{}); ok {
+					var server Server
+					server.Name = fmt.Sprintf("%v", options["Name"])
+					server.URL = fmt.Sprintf("%v", options["URL"])
+					if sgi, ok := options["ServerGroupId"]; ok {
+						v, _ := strconv.Atoi(fmt.Sprintf("%v", sgi))
+						server.ServerGroupID = uint(v)
+					}
+					if server.ServerGroupID == 0 {
+						server.ServerGroupID = 1
+					}
+
+					ret := db.Save(&server)
+					if ret.Error != nil {
+						chanelWebSocket <- MessageRTM{Command: "ERROR", Msg: ret.Error}
+						return
+					}
+
+					serverGroup, err := GetServerGroupComposit()
+					if err != nil {
+						glog.Error("Error ServerGroup:", err)
+					}
+					chanelWebSocket <- MessageRTM{Command: "LISTSERVER", Msg: serverGroup}
+
+				} else {
+					chanelWebSocket <- MessageRTM{Command: "ERROR", Msg: "SaveConnexion error type"}
+				}
+			case "DeleteConnection":
+				fmt.Println("DeleteConnexion", messageRTM)
+				if messageRTM.Msg == nil {
+					chanelWebSocket <- MessageRTM{Command: "ERROR", Msg: "Delete Connexion: Add ID"}
+					return
+				}
+
+				idString := fmt.Sprintf("%v", messageRTM.Msg)
+				id, _ := strconv.Atoi(idString)
+
+				var server Server
+				server.ID = uint(id)
+				ret := db.Debug().Delete(&server)
+				if ret.Error != nil {
+					chanelWebSocket <- MessageRTM{Command: "ERROR", Msg: "Delete Connexion: " + ret.Error.Error()}
+					return
+				}
+
+				// Reload Server
+				serverGroup, err := GetServerGroupComposit()
+				if err != nil {
+					glog.Error("Error ServerGroup:", err)
+				}
+				chanelWebSocket <- MessageRTM{Command: "LISTSERVER", Msg: serverGroup}
+
+			// Start session init Session
 			case "START":
 				// Create session
 				var numeroSession int
@@ -186,22 +240,25 @@ func wshandler(w http.ResponseWriter, r *http.Request) {
 							idServer, _ := strconv.Atoi(messageRTM.Msg.(string)[3:])
 							server, errSql := GetServerById(idServer)
 							if errSql == nil {
-								u, err := url.Parse(server.URL)
-								if err != nil {
-									glog.Error("Config driver parse URL (", server.URL, "):", err)
-								} else {
-									msg := make(map[string]string)
-									msg["Port"] = fmt.Sprintf("%v", u.Port())
-									hsplit := strings.Split(u.Host, "|")
-									msg["Ip"] = hsplit[0]
-									if len(hsplit) > 1 {
-										msg["Domain"] = hsplit[1]
-									}
-									msg["Username"] = u.User.Username()
+								messageRTM.Msg = server.URL
+								/*
+									u, err := url.Parse(server.URL)
+									if err != nil {
+										glog.Error("Config driver parse URL (", server.URL, "):", err)
+									} else {
+										msg := make(map[string]string)
+										msg["Port"] = fmt.Sprintf("%v", u.Port())
+										hsplit := strings.Split(u.Host, "|")
+										msg["Ip"] = hsplit[0]
+										if len(hsplit) > 1 {
+											msg["Domain"] = hsplit[1]
+										}
 
-									msg["Password"] = "Test1978!"
-									messageRTM.Msg = msg
-								}
+										msg["Username"] = u.User.Username()
+										msg["Password"], _ = u.User.Password()
+										messageRTM.Msg = msg
+									}
+								*/
 							} else {
 								glog.Error("Server not found")
 							}
@@ -225,7 +282,7 @@ func wshandler(w http.ResponseWriter, r *http.Request) {
 
 						// Start can too long
 						go func() {
-							listSession[numeroSession].Start(chanelWebSocket, numeroSession, messageRTM.Msg)
+							listSession[numeroSession].Start(chanelWebSocket, numeroSession, fmt.Sprintf("%v", messageRTM.Msg))
 						}()
 					}
 				}

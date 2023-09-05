@@ -1,4 +1,4 @@
-module webRemotedektop
+module github.com/Archie1978/regate
 
 go 1.19
 

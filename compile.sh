@@ -2,7 +2,7 @@
 
 go build
 
-cd www/web-remotedektop
+cd www/regate
 npm run build
 cd ../..
-./webRemotedektop
+./regate

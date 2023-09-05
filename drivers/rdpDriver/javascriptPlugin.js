@@ -199,6 +199,33 @@ class RDP {
         e.preventDefault();
         return false;
     }
+
+    // fonction option configuration return string: Error or object for configuration connection WS
+    static encodeConfiguration(dataForm){
+
+        if(dataForm.user=="" || dataForm.user==undefined) {
+            return ("user is empty")
+        }
+        if(dataForm.domain==""|| dataForm.domain==undefined) {
+            return ("domain is empty")
+        }
+        if(dataForm.host==""|| dataForm.host==undefined) {
+            return ("host is empty")
+        }
+
+        var userdomain=dataForm.domain+"/"+dataForm.user
+        var encodedSchema = encodeURIComponent("rdp");
+        var encodedAuthority = `${encodeURIComponent(userdomain)}:${encodeURIComponent(dataForm.password)}@${encodeURIComponent(dataForm.host)}`;
+//        const encodedPath = encodeURIComponent(path);
+//        const encodedQuery = encodeURIComponent(query);
+//        var encodedFragment = encodeURIComponent(fragment);
+
+//        return `${encodedSchema}://${encodedAuthority}${encodedPath}?${encodedQuery}#${encodedFragment}`;
+        return {
+            Name: dataForm.name,
+            URL:`${encodedSchema}://${encodedAuthority}`    
+        }
+    }
     
 }
 
