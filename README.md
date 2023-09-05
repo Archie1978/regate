@@ -39,7 +39,8 @@ SSH:
 ## Build
 1. Build vue code
 2. cd www/regate
-3. npm run build
-4. cd ../..
-5. go build
+3. yarn install
+4. yarn run build
+5. cd ../..
+6. go build
 
