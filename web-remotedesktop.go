@@ -12,7 +12,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/takama/daemon"
-	"github.com/tomatome/grdp/glog"
+	"github.com/golang/glog"
 )
 
 const (

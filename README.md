@@ -44,3 +44,6 @@ SSH:
 5. cd ../..
 6. go build
 
+## Release
+Version: 0.0.0
+Version init

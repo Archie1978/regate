@@ -53,7 +53,6 @@
 
 
 <script>
-
 import SlideBar from "./components/SlideBar.vue"
 import TabPanels from "./components/TabPanels.vue"
 import eventBus from './eventBus'
@@ -102,6 +101,8 @@ export default {
     scriptlocale.onload = () => {
         console.log("script addon-local.js loaded");
     }
+
+  //
 
     // Get Signal event into bus
     var app=this;
