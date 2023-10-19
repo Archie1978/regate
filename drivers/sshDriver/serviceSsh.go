@@ -7,10 +7,11 @@ import (
 	"net/url"
 	"strconv"
 
-	"github.com/Archie1978/regate/drivers"
-	"github.com/mitchellh/mapstructure"
+	"github.com/Archie1978/regate/crypto"
 
+	"github.com/Archie1978/regate/drivers"
 	"github.com/golang/glog"
+	"github.com/mitchellh/mapstructure"
 
 	"golang.org/x/crypto/ssh"
 
@@ -72,7 +73,7 @@ func (processSSh *ProcessSsh) startSSh() {
 	config := &ssh.ClientConfig{
 		User: processSSh.msgConnect.Username,
 		Auth: []ssh.AuthMethod{
-			ssh.Password(processSSh.msgConnect.Password),
+			ssh.Password(crypto.DecryptPasswordString(processSSh.msgConnect.Password)),
 		},
 		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
 	}

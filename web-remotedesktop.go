@@ -10,6 +10,7 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/Archie1978/regate/configuration"
 	"github.com/gin-gonic/gin"
 	"github.com/takama/daemon"
 	"github.com/tomatome/grdp/glog"
@@ -60,7 +61,7 @@ func (service *Service) Manage() (string, error) {
 	}
 
 	fmt.Println("Load configuration: configuration.json")
-	err := LoadConfiguration("configuration.json")
+	err := configuration.LoadConfiguration("configuration.json")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -85,7 +86,7 @@ func (service *Service) Manage() (string, error) {
 	initService(r)
 
 	// Listen and serve on 0.0.0.0:5543
-	r.Run(ConfigurationGlobal.Listen)
+	r.Run(configuration.ConfigurationGlobal.Listen)
 
 	// never happen, but need to complete code
 	return usage, nil

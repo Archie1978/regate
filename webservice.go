@@ -6,10 +6,12 @@ import (
 	"log"
 	"math/rand"
 	"net/http"
+	"net/url"
 	"reflect"
 	"strconv"
 	"strings"
 
+	"github.com/Archie1978/regate/crypto"
 	"github.com/Archie1978/regate/drivers"
 
 	"github.com/gin-contrib/static"
@@ -93,6 +95,32 @@ var (
 	VERSION []byte
 )
 
+func updatePasswordInURL(inputURL string) (string, error) {
+	// Analyser l'URL
+	u, err := url.Parse(inputURL)
+	if err != nil {
+		return "", err
+	}
+
+	// Obtenir les informations d'utilisateur (y compris le mot de passe) de l'URL
+	userInfo := u.User
+	if userInfo != nil {
+		// Extraire le mot de passe actuel
+		currentPassword, _ := userInfo.Password()
+
+		// Remplacer le mot de passe actuel par le nouveau mot de passe
+		newUserInfo := url.UserPassword(userInfo.Username(), crypto.CryptPasswordString(currentPassword))
+		u.User = newUserInfo
+
+		// Reconstruire l'URL modifié
+		modifiedURL := u.String()
+
+		return modifiedURL, nil
+	}
+
+	return "", fmt.Errorf("L'URL ne contient pas d'informations d'utilisateur (mot de passe)")
+}
+
 // Get wsHandler
 func wshandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("Web service start")
@@ -171,14 +199,18 @@ func wshandler(w http.ResponseWriter, r *http.Request) {
 				if options, ok := messageRTM.Msg.(map[string]interface{}); ok {
 					var server Server
 					server.Name = fmt.Sprintf("%v", options["Name"])
-					server.URL = fmt.Sprintf("%v", options["URL"])
 					if sgi, ok := options["ServerGroupId"]; ok {
 						v, _ := strconv.Atoi(fmt.Sprintf("%v", sgi))
 						server.ServerGroupID = uint(v)
 					}
+
+					// Add server GroupRoot
 					if server.ServerGroupID == 0 {
 						server.ServerGroupID = 1
 					}
+
+					// Add password
+					server.URL, _ = updatePasswordInURL(fmt.Sprintf("%v", options["URL"]))
 
 					ret := db.Save(&server)
 					if ret.Error != nil {

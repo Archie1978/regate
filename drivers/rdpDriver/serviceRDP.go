@@ -14,6 +14,8 @@ import (
 
 	"github.com/tomatome/grdp/glog"
 	"github.com/tomatome/grdp/protocol/pdu"
+
+	"github.com/Archie1978/regate/crypto"
 )
 
 type Screen struct {
@@ -122,7 +124,7 @@ func (processRDP *ProcessRdp) startRDP(chanelWebSocket chan interface{}) {
 	info.Ip = msgConnect.Ip
 	info.Port = fmt.Sprintf("%v", msgConnect.Port)
 	info.Username = msgConnect.Username
-	info.Passwd = msgConnect.Password
+	info.Passwd = crypto.DecryptPasswordString(msgConnect.Password)
 	info.Screen.Height = msgConnect.Height
 	info.Screen.Width = msgConnect.Width
 	processRDP.g.info = &info

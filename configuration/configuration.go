@@ -1,4 +1,4 @@
-package main
+package configuration
 
 import (
 	"encoding/json"
@@ -10,22 +10,22 @@ import (
 	"github.com/fsnotify/fsnotify"
 	"github.com/gin-gonic/gin"
 )
- 
+
 type Configuration struct {
 	Accounts gin.Accounts
 	Listen   string
 
-	DatabasePath         string
+	KeyCrypt     []byte
+	DatabasePath string
 }
 
 var ConfigurationGlobal Configuration
 
- 
 // Load PasswordCrypte
 func LoadConfiguration(path string) error {
 
 	// Add watcher
-	go func() { 
+	go func() {
 		// Refresh conf
 		watcher, err := fsnotify.NewWatcher()
 		if err != nil {
@@ -86,9 +86,6 @@ func LoadConfiguration(path string) error {
 	return err
 }
 
-
-
-
 func loadConfiguration(path string) error {
 	// Open Json
 	jsonFile, err := os.Open(path)
@@ -104,8 +101,7 @@ func loadConfiguration(path string) error {
 		return fmt.Errorf("Error Load:%v", err)
 	}
 
-
-	// Init default 
+	// Init default
 	if ConfigurationGlobal.DatabasePath == "" {
 		ConfigurationGlobal.DatabasePath = "database.sqlite"
 	}
