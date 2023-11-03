@@ -9,6 +9,7 @@ I use adaptation code of tomatome/grdp ( and Sylvain Peyrefitte for JS ) for RDP
 
 **The project is under development and not finished yet.**
 Regate:
+* [ ] Interface installation
 * [ ] Interface (unfinished)
 * [ ] Ssl configuration ( not yet)
 * [ ] Authentification interface ( not yet)
@@ -47,3 +48,11 @@ SSH:
 ## Release
 Version: 0.0.0
 Version init
+
+
+## Plan dev Next
+* Interface installation ( standalone )
+* Use Regate standalone by user linux/Windows
+* One binary HTML is into binary
+* Use Regate multiuser (bastion) connexion LDAP
+

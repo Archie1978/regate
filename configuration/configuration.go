@@ -7,6 +7,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/Archie1978/regate/authentification"
 	"github.com/fsnotify/fsnotify"
 	"github.com/gin-gonic/gin"
 )
@@ -15,11 +16,17 @@ type Configuration struct {
 	Accounts gin.Accounts
 	Listen   string
 
-	KeyCrypt     []byte
-	DatabasePath string
+	Authentification string // method of authentification  type:   method://options
+	KeyCrypt         []byte
+	DatabasePath     string
 }
 
 var ConfigurationGlobal Configuration
+
+// Get
+func (configuration Configuration) GetAuthentification() (authentification.DriverAuthentfication, error) {
+	return authentification.GetDriverURL(configuration.Authentification)
+}
 
 // Load PasswordCrypte
 func LoadConfiguration(path string) error {
@@ -99,6 +106,11 @@ func loadConfiguration(path string) error {
 	err = dec.Decode(&ConfigurationGlobal)
 	if err != nil {
 		return fmt.Errorf("Error Load:%v", err)
+	}
+
+	// Authentification flat
+	if ConfigurationGlobal.Authentification == "" {
+		ConfigurationGlobal.Authentification = "none:///"
 	}
 
 	// Init default
