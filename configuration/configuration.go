@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
+	"sync"
 	"time"
 
 	"github.com/Archie1978/regate/authentification"
@@ -19,13 +21,31 @@ type Configuration struct {
 	Authentification string // method of authentification  type:   method://options
 	KeyCrypt         []byte
 	DatabasePath     string
+
+	auth       authentification.DriverAuthentfication
+	authLocker sync.Mutex
 }
 
 var ConfigurationGlobal Configuration
 
-// Get
-func (configuration Configuration) GetAuthentification() (authentification.DriverAuthentfication, error) {
-	return authentification.GetDriverURL(configuration.Authentification)
+// Get driver authentification, create Object If not existe
+func (configuration *Configuration) GetAuthentification() (conf authentification.DriverAuthentfication, err error) {
+	configuration.authLocker.Lock()
+	defer configuration.authLocker.Unlock()
+	if configuration.auth == nil {
+		configuration.auth, err = authentification.GetDriverURL(configuration.Authentification)
+	}
+	return configuration.auth, err
+}
+
+func (configuration *Configuration) GetConnectURL() (url string) {
+	if strings.HasPrefix(configuration.Listen, ":") {
+		return "http://127.0.0.1" + configuration.Listen
+	}
+	if strings.HasPrefix(configuration.Listen, "0.0.0.0:") {
+		return "http://127.0.0.1" + configuration.Listen[10:]
+	}
+	return "http://" + configuration.Listen
 }
 
 // Load PasswordCrypte
