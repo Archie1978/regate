@@ -29,7 +29,7 @@ RDP:
 SSH:
 * [x] Standard SSH by password
 * [ ] Standard SSH by key
-* [ ] Standard SSH by HSM
+* [ ] Standard SSH by HSM ( certificate x509 )
 
 ## Technologies
 
@@ -37,13 +37,21 @@ SSH:
 * JsTerminal
 * WebSocket
 
-## Build
+## Build ( step 1)
 1. Build vue code
 2. cd www/regate
 3. yarn install
 4. yarn run build
 5. cd ../..
-6. go build
+
+## Build Standalone ( step 2)
+1. cd cmd/regate-standalone-user
+2. go build -a
+
+## Build Daemon mode bastion/mutiuser ( step 2)
+1. cd cmd/regate-daemon/
+2. go build -a 
+
 
 ## Release
 Version: 0.0.0
