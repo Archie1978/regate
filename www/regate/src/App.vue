@@ -95,7 +95,7 @@ export default {
     const scriptlocale = document.createElement("script");
     scriptlocale.setAttribute(
       "src",
-      "http://localhost:8088/addon-local.js"
+	location.host+"/addon-local.js"
     )
     document.head.appendChild(scriptlocale);
     scriptlocale.onload = () => {

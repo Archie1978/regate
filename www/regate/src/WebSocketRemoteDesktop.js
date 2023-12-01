@@ -14,7 +14,7 @@ export default class WebSocketRemoteDesktop {
         console.log(process.env.DEVELOPPEMENT)
 
         var me=this;
-        var url="ws://"+location.hostname+":8088/ws"
+        var url="ws://"+location.host+"/ws"
         if ( process.env.URLWS ) {
             url=process.env.URLWS
         }
