@@ -53,6 +53,10 @@ func initService(router *gin.Engine) {
 	listWS = make(map[int]*websocket.Conn)
 	listSession = make(map[int]drivers.DriverRP)
 
+	// Service page static interface
+	filememory := NewServeFileSystem(systemFileInternal, "/www/regate/dist")
+	router.Use(static.Serve("/", filememory))
+
 	// Load ws
 	router.GET("/ws", func(c *gin.Context) {
 		wshandler(c)
@@ -61,11 +65,7 @@ func initService(router *gin.Engine) {
 	// Page dynamique for addon reote connexion
 	router.GET("/addon-local.js", funcRouterJavascriptRM)
 
-	// Service page static interface
-	router.Use(static.Serve("/", static.LocalFile("./www/regate/dist", false)))
-
 }
-
 func funcRouterJavascriptRM(c *gin.Context) {
 	content := `
 		var listPlugin=new Object();
@@ -143,7 +143,7 @@ func updatePasswordInURL(inputURL string) (string, error) {
 	return "", fmt.Errorf("L'URL ne contient pas d'informations d'utilisateur (mot de passe)")
 }
 
-// Get wsHandler
+// Get wsHandler for webservice
 func wshandler(c *gin.Context) {
 	w := c.Writer
 	r := c.Request
