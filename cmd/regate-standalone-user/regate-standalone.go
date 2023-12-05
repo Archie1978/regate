@@ -141,6 +141,8 @@ func (service *Service) Manage() (string, error) {
 		fmt.Println("Opendatabase", err)
 	}
 
+	// Check User Exist
+
 	// Do something, call your goroutines, etc
 
 	// Set up channel on which to send signal notifications.
@@ -173,6 +175,7 @@ func init() {
 	logger := log.New(os.Stdout, "", 0)
 	glog.SetLogger(logger)
 }
+
 func (service *Service) Version() (string, error) {
 	versionBinary := version.Version()
 	date := version.Date()
@@ -180,11 +183,15 @@ func (service *Service) Version() (string, error) {
 }
 
 func main() {
+
+	// Init service like daemon
 	srv, err := daemon.New(name, description, daemon.SystemDaemon, dependencies...)
 	if err != nil {
 		errlog.Println("Error: ", err)
 		os.Exit(1)
 	}
+
+	// Start Service
 	service := &Service{srv}
 	status, err := service.Manage()
 	if err != nil {

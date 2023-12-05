@@ -24,6 +24,12 @@ export default class WebSocketRemoteDesktop {
             var object=JSON.parse(event.data)
             console.info("recept:",object);
             switch(object.Command.toUpperCase()){
+
+                case "USER_PROFILE":
+                    console.log("Profil user arrived: ",object);
+                    eventBus.$emit(object.Command, object.Msg);
+                    break;
+
                 case "STARTED":
                     //Create tab
                     console.log(me,me.createSessionMenu.protocolClass);
@@ -79,19 +85,24 @@ export default class WebSocketRemoteDesktop {
         //connected()  
     }
 
+    // Get List serveur and refresh interface
     getListMenu(){
         this.sendMessage({Command:"LISTSERVER" })
     }
+
+    // Get Version and refresh interface web
     getVersion(){
         this.sendMessage({Command:"VERSION" })
     }
+
+    // save connexion into database via webservice and refesh interface when deleted
     saveConnection(recordServer){
         this.sendMessage({Command:"SaveConnection", Msg:recordServer})
     }
+
+    // delete connexion into database via webservice and refesh interface when deleted
     deleteConnection(recordServerID){
-        console.log("lll");
         this.sendMessage({Command:"DeleteConnection", Msg:recordServerID})
-        console.log("lll2");
     }
 
     // Start session with option
@@ -101,6 +112,7 @@ export default class WebSocketRemoteDesktop {
         this.sendMessage({Command:"START",TypeProtocol:typeProtocol, Msg: option})
     }
 
+    // Send message into webservice
     sendMessage(object){
         var me=this;
         console.log(object,this);

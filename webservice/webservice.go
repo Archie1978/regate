@@ -158,16 +158,20 @@ func wshandler(c *gin.Context) {
 	defer DelSocket(slotNumber)
 	defer connexionWebsocket.Close()
 
-	// Refresh session
-	/*
-		for numeroSession, session := range listSession {
-			//return
-		}
-	*/
+	// Get authentification
+	AuthentificationWeb, err := configuration.ConfigurationGlobal.GetAuthentification()
+	if err != nil {
+		log.Fatal(err)
+	}
+	profile, err := AuthentificationWeb.GetProfile(c)
+	if err != nil {
+		log.Fatal("GetProfile:")
+	}
 
 	// Channel socket
 	chanelWebSocket := make(chan interface{}, 100)
 	go func() {
+
 		for {
 			interfaceObject := <-chanelWebSocket
 			glog.Info("Send client:", interfaceObject)
@@ -191,6 +195,12 @@ func wshandler(c *gin.Context) {
 		}
 	}()
 
+	//Send profile
+	chanelWebSocket <- MessageRTM{Command: "USER_PROFILE", Msg: profile}
+
+	// Send directly profile
+
+	// Management request from interface
 	for {
 		_, message, err := connexionWebsocket.ReadMessage()
 		if err != nil {

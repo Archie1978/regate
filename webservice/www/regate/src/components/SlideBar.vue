@@ -8,8 +8,8 @@
     <v-list>
         <v-list-item
                 :prepend-avatar="avatarImg"
-                title="VALMIR Christophe"
-                subtitle="christophe.valmir@gmail.com"
+                :title="nameDisplay"
+                :subtitle="email"
         />
     </v-list>
     <v-diviser></v-diviser>
@@ -104,12 +104,13 @@ import eventBus from '../eventBus'
 import loadAvatar from '@/assets/avatar.jpg'
 
 export default {
-  name: 'HelloWorld',
+  name: 'SlideBar',
 
   data: () => ({
     "servers":[],
     avatarImg:loadAvatar,
-
+    nameDisplay:"-----",
+    email:""
   }),
   components: {},
   computed:{
@@ -270,6 +271,17 @@ export default {
       });
       me.$data["servers"]=serverList;
       me.$forceUpdate();
+    })
+
+    // Refresh List of server
+    eventBus.$on("USER_PROFILE",function(object){
+      console.log("ON bus",object);
+      console.log("loadAvatar",loadAvatar)
+      me.avatarImg= "data:image/png;base64,"+object.Avatar;
+      me.name=object.Name;
+      me.lastName=object.LastName;
+      me.nameDisplay=object.Name+" "+object.LastName;
+      me.email=object.Email;                    
     })
 
     // Connect to server regate and get List of server

@@ -9,8 +9,8 @@ import (
 // Test get code and application not started
 func TestCodeAnswer(t *testing.T) {
 	fmt.Println("Get Code without server")
-	var authentficationFlat AuthentificationFlat
-	code, err := authentficationFlat.GetCode()
+	var authentificationFlat AuthentificationFlat
+	code, err := authentificationFlat.GetCode()
 	if err != ErrAppNotStarted {
 		t.Fatal("Test Get code wthout server error:", err)
 	}
@@ -20,12 +20,12 @@ func TestCodeAnswer(t *testing.T) {
 
 	// Generate code
 	go func() {
-		authentficationFlat.engineGenerateCode()
+		authentificationFlat.engineGenerateCode()
 	}()
 
 	for {
 		<-time.After(time.Second)
-		code, err = authentficationFlat.GetCode()
+		code, err = authentificationFlat.GetCode()
 		fmt.Println("code, err", code, err)
 	}
 }

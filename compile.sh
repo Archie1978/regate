@@ -1,8 +1,10 @@
 #!/bin/bash
 
-go build
 
-cd www/regate
+cd webservice/www/regate/
 npm run build
-cd ../..
-./regate
+cd ../../..
+
+
+cd cmd/regate-standalone-user/
+go build 

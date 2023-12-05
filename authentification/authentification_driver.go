@@ -6,6 +6,7 @@ import (
 	"reflect"
 	"strings"
 
+	"github.com/Archie1978/regate/database"
 	"github.com/gin-gonic/gin"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
@@ -18,6 +19,7 @@ type DriverAuthentfication interface {
 	New(*url.URL) DriverAuthentfication
 	Authgin() gin.HandlerFunc
 	SetRouteurGin(router *gin.Engine)
+	GetProfile(c *gin.Context) (*database.UserProfile, error)
 }
 
 func init() {

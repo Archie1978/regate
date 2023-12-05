@@ -14,8 +14,10 @@ import (
 
 	"bitbucket.org/avd/go-ipc/mmf"
 	"bitbucket.org/avd/go-ipc/shm"
+	"gorm.io/gorm"
 
 	"github.com/Archie1978/regate/authentification"
+	"github.com/Archie1978/regate/database"
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-contrib/sessions/cookie"
 	"github.com/gin-gonic/gin"
@@ -49,34 +51,34 @@ type AuthentificationFlat struct {
 	CanalGenerate chan bool
 }
 
-// Generate New authentficationFlat
-func (authentficationFlat *AuthentificationFlat) New(configuration *url.URL) authentification.DriverAuthentfication {
+// Generate New authentificationFlat
+func (authentificationFlat *AuthentificationFlat) New(configuration *url.URL) authentification.DriverAuthentfication {
 	return &AuthentificationFlat{CanalGenerate: make(chan bool, 10)}
 }
 
 // Start Authentification
-func (authentficationFlat *AuthentificationFlat) Start() {
+func (authentificationFlat *AuthentificationFlat) Start() {
 
-	if _, err := authentficationFlat.GetCode(); err == ErrAppNotStarted {
-		go authentficationFlat.engineGenerateCode()
+	if _, err := authentificationFlat.GetCode(); err == ErrAppNotStarted {
+		go authentificationFlat.engineGenerateCode()
 	}
 
 }
 
 // Start SetRouteurGin
-func (authentficationFlat *AuthentificationFlat) SetRouteurGin(router *gin.Engine) {
+func (authentificationFlat *AuthentificationFlat) SetRouteurGin(router *gin.Engine) {
 
 	var secret, err = password.Generate(64, 10, 10, true, true)
 	if err != nil {
 		log.Fatal(err)
 	}
 	router.Use(sessions.Sessions("mysession", cookie.NewStore([]byte(secret))))
-	router.Use(authentficationFlat.Authgin())
+	router.Use(authentificationFlat.Authgin())
 
 }
 
-// authentficationFlat: Allow authentification before get the page
-func (authentficationFlat *AuthentificationFlat) Authgin() gin.HandlerFunc {
+// authentificationFlat: Allow authentification before get the page
+func (authentificationFlat *AuthentificationFlat) Authgin() gin.HandlerFunc {
 	return func(c *gin.Context) {
 
 		// Get session and check parametre ( private is changed when the appalication reloaded )
@@ -94,20 +96,20 @@ func (authentficationFlat *AuthentificationFlat) Authgin() gin.HandlerFunc {
 		}
 
 		// Check the last code into  share memory
-		if c.Query("code") == authentficationFlat.Code && authentficationFlat.Code != "" {
+		if c.Query("code") == authentificationFlat.Code && authentificationFlat.Code != "" {
 
 			//Reset all code
-			authentficationFlat.Code = ""
-			authentficationFlat.CanalGenerate <- true
-			authentficationFlat.CanalGenerate <- true
+			authentificationFlat.Code = ""
+			authentificationFlat.CanalGenerate <- true
+			authentificationFlat.CanalGenerate <- true
 			authValid = true
 		} else {
 
 			// Check the seconde to last code into  share memory
-			if c.Query("code") == authentficationFlat.CodeOld && authentficationFlat.CodeOld != "" {
+			if c.Query("code") == authentificationFlat.CodeOld && authentificationFlat.CodeOld != "" {
 
 				// Not Reset code
-				authentficationFlat.CodeOld = ""
+				authentificationFlat.CodeOld = ""
 				authValid = true
 
 			} else {
@@ -142,7 +144,7 @@ func (authentficationFlat *AuthentificationFlat) Authgin() gin.HandlerFunc {
 }
 
 // getMemoryZone: Create memory share
-func (authentficationFlat *AuthentificationFlat) getMemoryZone() (rwRegion *mmf.MemoryRegion, err error) {
+func (authentificationFlat *AuthentificationFlat) getMemoryZone() (rwRegion *mmf.MemoryRegion, err error) {
 	u, err := user.Current()
 	if err != nil {
 		return nil, err
@@ -168,31 +170,31 @@ func (authentficationFlat *AuthentificationFlat) getMemoryZone() (rwRegion *mmf.
 }
 
 // engineGenerateCode: Generate Code into memorie share ( use goroutine )
-func (authentficationFlat *AuthentificationFlat) engineGenerateCode() {
-	rwRegion, err := authentficationFlat.getMemoryZone()
+func (authentificationFlat *AuthentificationFlat) engineGenerateCode() {
+	rwRegion, err := authentificationFlat.getMemoryZone()
 
 	if err != nil {
 		log.Fatal(err)
 	}
 	writer := mmf.NewMemoryRegionWriter(rwRegion)
 
-	authentficationFlat.CanalGenerate <- true
+	authentificationFlat.CanalGenerate <- true
 	for {
 
 		ticker := time.NewTicker(time.Duration(TimeRefreshCode) * time.Second)
 
 		select {
-		case <-authentficationFlat.CanalGenerate:
+		case <-authentificationFlat.CanalGenerate:
 		case <-ticker.C:
 			// TimeOut refresh Code
 		}
 
 		buffer := bytes.NewBufferString("")
-		authentficationFlat.CodeOld = authentficationFlat.Code
-		authentficationFlat.Code, err = password.Generate(64, 10, 10, false, false)
+		authentificationFlat.CodeOld = authentificationFlat.Code
+		authentificationFlat.Code, err = password.Generate(64, 10, 10, false, false)
 
 		if err != nil {
-			authentficationFlat.Code = ""
+			authentificationFlat.Code = ""
 		}
 		ts := time.Now().Unix()
 		err = binary.Write(buffer, binary.LittleEndian, &ts)
@@ -200,8 +202,8 @@ func (authentficationFlat *AuthentificationFlat) engineGenerateCode() {
 			log.Fatal("Note found")
 		}
 
-		written, err := buffer.Write([]byte(authentficationFlat.Code))
-		if written != len(authentficationFlat.Code) {
+		written, err := buffer.Write([]byte(authentificationFlat.Code))
+		if written != len(authentificationFlat.Code) {
 			log.Fatal(err)
 		}
 
@@ -212,8 +214,8 @@ func (authentficationFlat *AuthentificationFlat) engineGenerateCode() {
 }
 
 // GetCode: GetCode get code into share memory or error with application not stated ( var ErrAppNotStarted )
-func (authentficationFlat *AuthentificationFlat) GetCode() (code string, err error) {
-	rwRegion, err := authentficationFlat.getMemoryZone()
+func (authentificationFlat *AuthentificationFlat) GetCode() (code string, err error) {
+	rwRegion, err := authentificationFlat.getMemoryZone()
 
 	if err != nil {
 		return "", err
@@ -236,4 +238,19 @@ func (authentficationFlat *AuthentificationFlat) GetCode() (code string, err err
 	err = binary.Read(reader, binary.LittleEndian, &codeByte)
 
 	return string(string(codeByte[:])), nil
+}
+
+// GetProfile: get user into database
+func (authentificationFlat *AuthentificationFlat) GetProfile(c *gin.Context) (*database.UserProfile, error) {
+	profilUser, err := database.LoadUser("authentificationFlat")
+	if err == gorm.ErrRecordNotFound || profilUser.Name == "" {
+		profilUser, err = database.NewUser()
+		if err != nil {
+			log.Fatal(err)
+		}
+		profilUser.Name = "Unknown"
+		profilUser.Referance = "authentificationFlat"
+		database.SaveUser(profilUser)
+	}
+	return profilUser, nil
 }
