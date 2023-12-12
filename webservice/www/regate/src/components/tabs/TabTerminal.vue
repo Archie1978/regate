@@ -12,16 +12,15 @@
             v-show="remoteLoadingShow"
             :style="{'backgroundImage':  'url('+remoteLoadingImg+')', 'top': remoteLoadingTop + 'px','left': remoteLoadingLeft + 'px','width': remoteLoadingWidth + 'px','height': remoteLoadingHeight + 'px' }">
         </div>
+
+        <div ref="menucontexuel"  v-show="showMenu" 
+            @mouseleave="showMenu=false"
+            :style="{ 'top': menuY + 'px','left': menuX + 'px','width': 100 + 'px','height': 100 + 'px', position:'absolute',background: 'white','z-index':'100' }">
+            <template  v-for="item in menucontexuelItems" :key="item.name">
+                <button @click="menucontexuelClick(  item )" > {{ item.name }}</button>
+            </template>
+        </div>
     </v-row>
-
-    <div ref="menucontexuel"  v-show="showMenu" 
-        @mouseleave="showMenu=false"
-        :style="{ 'top': menuY + 'px','left': menuX + 'px','width': 100 + 'px','height': 100 + 'px', position:'absolute',background: 'white','z-index':'100' }">
-        <template  v-for="item in menucontexuelItems" :key="item.name">
-            <button @click="menucontexuelClick(  item )" > {{ item.name }}</button>
-        </template>
-    </div>
-
 </template>
 
 <style>

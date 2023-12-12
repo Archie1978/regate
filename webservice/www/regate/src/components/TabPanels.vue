@@ -189,7 +189,7 @@ export default {
       }
       this.tagTarget = tagTarget;
 
-      // Active panel
+      // Active focus into panel
       let panelcurrent=this.getCurrentTabPanel();
       if(panelcurrent.protocolObject){
         if(panelcurrent.protocolObject.focus){
