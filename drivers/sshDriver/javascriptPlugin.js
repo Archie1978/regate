@@ -3,6 +3,7 @@ class Ssh {
         this.connected=false;
         this.terminal=null;
         this.terminalVue=null;
+        this.pathupload="";
     }
 
     // Driver name
@@ -33,6 +34,7 @@ class Ssh {
         // Create terminal
         this.terminal.open(this.terminalElement);
 
+        // Create 
         var sshObject=this;
         this.terminal.onKey((e) => {
             console.log("this.terminal.onKey",e);
@@ -81,7 +83,46 @@ class Ssh {
         this.focus();
 
         // Set stdout event
-        this.stdout(this.eventBus,terminalVue.sessionNumber);
+        this.stdout(this.eventBus,this.terminalVue.sessionNumber);
+
+
+        // Add event drop file
+        let rowElements = this.terminalVue.$refs.terminal.querySelectorAll("div");
+        let me=this;
+        rowElements.forEach(row => {
+            row.addEventListener(
+            "drop",
+            (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+
+                if(me.pathupload==""){
+                    alert("Set path uploas with menu contextuel")
+                    return
+                }
+
+                const uploadForm = new FormData();
+                for (const file of e.dataTransfer.files) {
+                    uploadForm.append('file', file);
+                }
+
+                fetch('/uploadFile?sessionNumber='+me.terminalVue.sessionNumber+"&pathDir="+encodeURI(me.pathupload), {
+                    method: 'POST',
+                    body: uploadForm
+                })
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Success:', data);
+                })
+                .catch((error) => {
+                    console.error('Error:', error);
+                });
+
+
+            },
+            false
+        )
+        });
     }
 
     base64ToArrayBuffer(base64) {
@@ -135,6 +176,38 @@ class Ssh {
         }
     }
 
+    // Menucontextuel: return menu for configure drap and drop
+    showContextMenu(e){
+        console.log("TerminalSsh: contextMenu:",this.terminalVue,e);
+        //document.getElementById(this.terminalVue.id).querySelector("textarea").focus();
+        return         [
+            {
+                name: 'Download path',
+                slug: 'add-star',
+            },
+            {
+                name: 'Set Dir Upload',
+                slug: 'remove-star',
+            },
+        ];
+    }
+
+    // Action menu contextuel
+    menucontexuelClick(item){
+        console.log("TerminalSsh: menucontexuelClick",item,this);
+        let text = this.terminalVue.getSelectionIntoTerminal();
+        let sessionNumber=this.terminalVue.sessionNumber;
+        switch(item.name){
+            case "Download path":
+                this.downloadFile(encodeURI("/downloadFile?sessionNumber="+sessionNumber+"&path="+text),"download")
+            case "Set Dir Upload":
+                this.pathupload=text;
+            default:
+                console.error("RemoteSsh: menucontexuelClick: ",item.name)
+        }
+        console.log("TerminalSsh: menucontexuelClick:",window.getSelection(), text)
+    }
+
     // fonction option configuration return string: Error or object for configuration connection WS
     static encodeConfiguration(dataForm){
         if(dataForm.user==""||dataForm.user==undefined) {
@@ -154,6 +227,19 @@ class Ssh {
             URL:`${encodedSchema}://${encodedAuthority}`
         }
     }
+
+
+    downloadFile(url, nomFichier) {
+        const downloadLink = document.createElement('a');
+        downloadLink.href = url;
+        downloadLink.download = nomFichier;
+    
+        document.body.appendChild(downloadLink);
+        downloadLink.click();
+        document.body.removeChild(downloadLink);
+    }
+
+    
     
 }
 

@@ -61,6 +61,12 @@ func initService(router *gin.Engine) {
 	router.GET("/ws", func(c *gin.Context) {
 		wshandler(c)
 	})
+	router.GET("/downloadFile", func(c *gin.Context) {
+		downloadFile(c)
+	})
+	router.POST("/uploadFile", func(c *gin.Context) {
+		uploadFile(c)
+	})
 
 	// Page dynamique for addon reote connexion
 	router.GET("/addon-local.js", funcRouterJavascriptRM)
@@ -368,4 +374,47 @@ func wshandler(c *gin.Context) {
 			}
 		}
 	}
+}
+
+// Download file into session
+func downloadFile(c *gin.Context) {
+	sessionNumberString := c.Query("sessionNumber")
+	sessionNumber, _ := strconv.Atoi(sessionNumberString)
+
+	fmt.Println("sessionNumber:", sessionNumberString, "    ", sessionNumber)
+	if session, ok := listSession[sessionNumber]; !ok {
+		fmt.Println("session: failed")
+		c.String(500, "session not found or unauthorized.")
+		c.Abort()
+		return
+	} else {
+		fmt.Println("session:", session)
+		err := session.DownloadFile(c)
+		if err != nil {
+
+		}
+	}
+}
+
+// Upload file into session
+func uploadFile(c *gin.Context) {
+	sessionNumberString := c.Query("sessionNumber")
+	sessionNumber, _ := strconv.Atoi(sessionNumberString)
+
+	fmt.Println("sessionNumber:", sessionNumberString, "    ", sessionNumber)
+	if session, ok := listSession[sessionNumber]; !ok {
+		fmt.Println("session: failed")
+		c.String(500, "session not found or unauthorized.")
+		c.Abort()
+		return
+	} else {
+		fmt.Println("session:", session)
+		err := session.UploadFile(c)
+		if err != nil {
+
+		}
+	}
+
+	fmt.Println(sessionNumberString)
+
 }

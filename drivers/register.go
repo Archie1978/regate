@@ -3,6 +3,8 @@ package drivers
 import (
 	"fmt"
 	"reflect"
+
+	"github.com/gin-gonic/gin"
 )
 
 // Liste of driver remote protocol
@@ -15,6 +17,8 @@ type DriverRP interface {
 	Close()
 
 	GetCodeJavascript() (content string)
+	DownloadFile(*gin.Context) error
+	UploadFile(c *gin.Context) error
 }
 
 func init() {

@@ -60,6 +60,7 @@ import ModalConfigurationConnection from './components/ModalConfigurationConnect
 import ModalMessage from './components/ModalMessage.vue'
 
 
+
 export default {
   name: 'App',
 
@@ -125,6 +126,8 @@ export default {
     document.body.addEventListener('copy', function(e){
       console.log(e);
     });
+
+    
 
   }
 }

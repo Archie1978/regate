@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/Archie1978/regate/drivers"
+	"github.com/gin-gonic/gin"
 	"github.com/mitchellh/mapstructure"
 
 	"github.com/tomatome/grdp/glog"
@@ -328,4 +329,11 @@ var (
 
 func (processRDP *ProcessRdp) GetCodeJavascript() string {
 	return string(dataplugin) + "\n" + string(datapluginMstsc) + "\n" + string(datapluginCanvas) + "\n" + string(datapluginClient) + "\n" + string(datapluginRle) + "\n" + string(datapluginKeyboard) + "\n"
+}
+func (processRDP *ProcessRdp) DownloadFile(context *gin.Context) error {
+	return fmt.Errorf("Unumplemented")
+}
+
+func (processSSh *ProcessRdp) UploadFile(c *gin.Context) error {
+	return fmt.Errorf("Unumplemented")
 }
