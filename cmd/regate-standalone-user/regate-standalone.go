@@ -25,8 +25,8 @@ import (
 const (
 
 	// name of the service
-	name        = "web-remotedektop"
-	description = "Web remoteServeur"
+	name        = "regate-standalone"
+	description = "Regate: Webervice remote desktop via eb browser"
 
 	// port which daemon should be listen
 	port = "localhost:8354"
