@@ -54,9 +54,16 @@ SSH:
 
 
 ## Release
-Version: 0.0.0
+Version: 0.1.0
 Version init
 
+## Use Case
+Browser:
+* firefox 119.0 (64 bits)
+
+OS:
+* Linux Ubuntu 22.04 
+* Linux Ubuntu 18.04 
 
 ## Plan dev Next
 * Interface installation ( standalone )
