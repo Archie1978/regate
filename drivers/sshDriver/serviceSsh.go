@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"path"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -218,59 +219,71 @@ func (processSSh *ProcessSsh) DownloadFile(context *gin.Context) error {
 }
 
 func (processSSh *ProcessSsh) UploadFile(c *gin.Context) error {
+	pathDir := c.Query("pathDir")
 
-	file, err := c.FormFile("file")
+	// Get multi path
+	multipartReader, err := c.Request.MultipartReader()
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return err
 	}
 
-	src, err := file.Open()
-	if err != nil {
-		return err
-	}
-	defer src.Close()
+	// Itérer sur les parties du lecteur multipart
+	for {
 
-	// Utiliser le nom du fichier original avec un prefixe aléatoire pour éviter les conflits
-	sftpClient, err := sftp.NewClient(processSSh.client)
-	if err != nil {
-		err = fmt.Errorf("Erreur en établissant la connexion SFTP: %s", err)
-		fmt.Println(err)
-		return err
-	}
-	defer sftpClient.Close()
+		// Get Part
+		part, err := multipartReader.NextPart()
+		if err == io.EOF {
+			break
+		}
 
-	dir := filepath.Dir(file.Filename)
-	_, err = sftpClient.Stat(dir)
-	if !os.IsExist(err) {
-		if err = sftpClient.MkdirAll(dir); err != nil {
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return err
 		}
-	}
 
-	_, err = sftpClient.Stat(file.Filename)
-	if os.IsExist(err) {
-		sftpClient.Remove(file.Filename + ".old")
-		err = sftpClient.Rename(file.Filename, file.Filename+".old")
+		// Nom du fichier
+		fileName := path.Join(pathDir, part.FileName())
+
+		// Utiliser le nom du fichier original avec un prefixe aléatoire pour éviter les conflits
+		sftpClient, err := sftp.NewClient(processSSh.client)
+		if err != nil {
+			err = fmt.Errorf("Erreur en établissant la connexion SFTP: %s", err)
+			fmt.Println(err)
+			return err
+		}
+		defer sftpClient.Close()
+
+		dir := filepath.Dir(fileName)
+		_, err = sftpClient.Stat(dir)
+		if !os.IsExist(err) {
+			if err = sftpClient.MkdirAll(dir); err != nil {
+				return err
+			}
+		}
+
+		_, err = sftpClient.Stat(fileName)
+		if os.IsExist(err) {
+			sftpClient.Remove(fileName + ".old")
+			err = sftpClient.Rename(fileName, fileName+".old")
+			if err != nil {
+				return err
+			}
+		}
+
+		out, err := sftpClient.Create(fileName)
 		if err != nil {
 			return err
 		}
+		defer out.Close()
+
+		_, err = io.Copy(out, part)
+
+		if err != nil {
+
+		}
 	}
-
-	out, err := sftpClient.Create(file.Filename)
-	if err != nil {
-		return err
-	}
-	defer out.Close()
-
-	_, err = io.Copy(out, src)
-
-	if err != nil {
-
-	}
-
 	c.JSON(http.StatusOK, gin.H{"message": "File uploaded successfully"})
-
 	return err
 }
 

@@ -381,14 +381,13 @@ func downloadFile(c *gin.Context) {
 	sessionNumberString := c.Query("sessionNumber")
 	sessionNumber, _ := strconv.Atoi(sessionNumberString)
 
-	fmt.Println("sessionNumber:", sessionNumberString, "    ", sessionNumber)
+	// get Session
 	if session, ok := listSession[sessionNumber]; !ok {
 		fmt.Println("session: failed")
 		c.String(500, "session not found or unauthorized.")
 		c.Abort()
 		return
 	} else {
-		fmt.Println("session:", session)
 		err := session.DownloadFile(c)
 		if err != nil {
 
@@ -401,20 +400,16 @@ func uploadFile(c *gin.Context) {
 	sessionNumberString := c.Query("sessionNumber")
 	sessionNumber, _ := strconv.Atoi(sessionNumberString)
 
-	fmt.Println("sessionNumber:", sessionNumberString, "    ", sessionNumber)
+	// get Session
 	if session, ok := listSession[sessionNumber]; !ok {
 		fmt.Println("session: failed")
 		c.String(500, "session not found or unauthorized.")
 		c.Abort()
 		return
 	} else {
-		fmt.Println("session:", session)
 		err := session.UploadFile(c)
 		if err != nil {
-
+			fmt.Println("UploadFile: error:", err)
 		}
 	}
-
-	fmt.Println(sessionNumberString)
-
 }

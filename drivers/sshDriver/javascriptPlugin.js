@@ -96,29 +96,82 @@ class Ssh {
                 e.preventDefault();
                 e.stopPropagation();
 
+
                 if(me.pathupload==""){
-                    alert("Set path uploas with menu contextuel")
+                    alert("Set path upload with menu contextuel")
                     return
                 }
 
-                const uploadForm = new FormData();
-                for (const file of e.dataTransfer.files) {
-                    uploadForm.append('file', file);
+                const files = event.dataTransfer.items;
+                const fileArray = [];
+
+                // Get all fileEntry
+                for (let i = 0; i < files.length; i++) {
+                    const entry = files[i].webkitGetAsEntry();
+                    fileArray.push(entry);
                 }
 
-                fetch('/uploadFile?sessionNumber='+me.terminalVue.sessionNumber+"&pathDir="+encodeURI(me.pathupload), {
-                    method: 'POST',
-                    body: uploadForm
-                })
-                .then(response => response.json())
-                .then(data => {
-                    console.log('Success:', data);
-                })
-                .catch((error) => {
-                    console.error('Error:', error);
-                });
+                // Get all fileEntry
+                processFiles(fileArray);
+                function processFiles(files) {
+                    for (let i = 0; i < files.length; i++) {
+                        const entry = files[i];
+                        if (entry.isFile) {
+                            readFile(entry);
+                        } else if (entry.isDirectory) {
+                            readDirectory(entry.createReader());
+                        }
+                    }
+                }
+
+                // Read dir
+                function readDirectory(reader) {
+                    reader.readEntries(function(entries) {
+                        for (let i = 0; i < entries.length; i++) {
+                            const entry = entries[i];
+                            if (entry.isFile) {
+                                readFile(entry);
+                            } else if (entry.isDirectory) {
+                                readDirectory(entry.createReader());
+                            }
+                        }
+                    });
+                }
 
 
+                // Get dir of file
+                function getDir(filePath) {
+                    const parts = filePath.split('/');
+                    parts.pop();
+                    let folderPath = parts.join('/');               
+                    return folderPath;
+                }
+                
+                // send file
+                function readFile(fileEntry) {
+                    fileEntry.file(function(file) {
+                        const formData = new FormData();
+                        formData.append('file', file);
+
+                        console.log(fileEntry);
+
+                        // Exemple avec Fetch :
+                        fetch('/uploadFile?sessionNumber='+me.terminalVue.sessionNumber+"&pathDir="+
+                                    encodeURI(me.pathupload)+
+                                    "/"+getDir(fileEntry.fullPath), {
+                            method: 'POST',
+                            body: formData
+                        })
+                        .then(response => {
+                            if (response.ok) {
+                                console.log('Fichier envoyé avec succès');
+                            } else {
+                                console.error('Erreur lors de l\'envoi du fichier');
+                            }
+                        });
+                        
+                    });
+                }
             },
             false
         )
