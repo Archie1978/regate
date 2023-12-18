@@ -12,15 +12,15 @@
             v-show="remoteLoadingShow"
             :style="{'backgroundImage':  'url('+remoteLoadingImg+')', 'top': remoteLoadingTop + 'px','left': remoteLoadingLeft + 'px','width': remoteLoadingWidth + 'px','height': remoteLoadingHeight + 'px' }">
         </div>
-
         <div ref="menucontexuel"  v-show="showMenu" 
             @mouseleave="showMenu=false"
-            :style="{ 'top': menuY + 'px','left': menuX + 'px','width': 100 + 'px','height': 100 + 'px', position:'absolute',background: 'white','z-index':'100' }">
+            :style="{ 'top': menuY + 'px','left': menuX + 'px','width': 300 + 'px','height': 100 + 'px', position:'absolute',background: 'white','z-index':'100' }">
             <template  v-for="item in menucontexuelItems" :key="item.name">
-                <button @click="menucontexuelClick(  item )" > {{ item.name }}</button>
+                <button @click="menucontexuelClick(  item )" style="width:100%" > {{ item.name }}</button>
             </template>
         </div>
     </v-row>
+    <div ref="info"></div>
 </template>
 
 <style>
@@ -138,7 +138,7 @@ export default {
 
 
     methods: {
-        // 
+        // Add context menu
         showContextMenu: function (event) {
             // Get Menu
             if(this.protocolObject){
@@ -177,12 +177,7 @@ export default {
                 t+=element.textContent;
             });
             return t;
-        },
-
-        ondrop(event,index){
-            console.log("event,index:",event,index);
-            event.preventDefault();
-        },
+        }
     }
 
 };

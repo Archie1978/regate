@@ -91,12 +91,39 @@ class Ssh {
         let me=this;
         rowElements.forEach(row => {
             row.addEventListener(
+                "dragover",
+                (e) => {
+                    // Add red into xterm
+                    if(e.target.parentElement.classList.contains('xterm-rows')) {
+                        e.target.parentElement.style.borderColor = "red";
+                        e.target.parentElement.style.borderStyle = "solid";
+                    }else{
+                        // It is a case xterm, up to xterm tag
+                        e.target.parentElement.parentElement.style.borderColor = "red";
+                        e.target.parentElement.parentElement.style.borderStyle = "solid";
+                    }
+                }
+            );
+            row.addEventListener(
+                "dragleave",
+                (e) => {
+                    // Delete border without
+                    e.target.parentElement.style.borderStyle = "none";
+                    e.target.parentElement.parentElement.style.borderStyle = "none";
+                }
+            );
+
+            row.addEventListener(
             "drop",
             (e) => {
+                // remove event propagation
                 e.preventDefault();
                 e.stopPropagation();
 
+                // Remove style
+                e.target.parentElement.style.borderStyle = "none";
 
+                // Check pathupload
                 if(me.pathupload==""){
                     alert("Set path upload with menu contextuel")
                     return
@@ -165,8 +192,9 @@ class Ssh {
                         .then(response => {
                             if (response.ok) {
                                 console.log('Fichier envoyé avec succès');
+                                this.terminalVue.$refs.info.html("File send successfull.");
                             } else {
-                                console.error('Erreur lors de l\'envoi du fichier');
+                                this.terminalVue.$refs.info.html("File not send .");
                             }
                         });
                         
