@@ -37,8 +37,8 @@ class Ssh {
         // Create 
         var sshObject=this;
         this.terminal.onKey((e) => {
-            console.log("this.terminal.onKey",e);
 
+            // Send key
             if(this.connected){
                 const ev = e.domEvent;
                 const printable = !ev.altKey && !ev.ctrlKey && !ev.metaKey;
@@ -80,6 +80,8 @@ class Ssh {
             }
             return false;
         });
+
+        // Add focus into terminal
         this.focus();
 
         // Set stdout event
@@ -90,20 +92,27 @@ class Ssh {
         let rowElements = this.terminalVue.$refs.terminal.querySelectorAll("div");
         let me=this;
         rowElements.forEach(row => {
+
+            // Display red border
             row.addEventListener(
                 "dragover",
                 (e) => {
-                    // Add red into xterm
-                    if(e.target.parentElement.classList.contains('xterm-rows')) {
-                        e.target.parentElement.style.borderColor = "red";
-                        e.target.parentElement.style.borderStyle = "solid";
-                    }else{
-                        // It is a case xterm, up to xterm tag
-                        e.target.parentElement.parentElement.style.borderColor = "red";
-                        e.target.parentElement.parentElement.style.borderStyle = "solid";
+                    // Ajuste
+                    if(!e.target.classList.contains("xterm-viewport")){
+                        // Add red into xterm
+                        if(e.target.parentElement.classList.contains("xterm-rows")) {
+                            e.target.parentElement.style.borderColor = "red";
+                            e.target.parentElement.style.borderStyle = "solid";
+                        }else{
+                            // It is a case xterm, up to xterm tag
+                            e.target.parentElement.parentElement.style.borderColor = "red";
+                            e.target.parentElement.parentElement.style.borderStyle = "solid";
+                        }
                     }
                 }
             );
+
+            // Discard red border
             row.addEventListener(
                 "dragleave",
                 (e) => {
@@ -113,96 +122,99 @@ class Ssh {
                 }
             );
 
+            // Send file
             row.addEventListener(
-            "drop",
-            (e) => {
-                // remove event propagation
-                e.preventDefault();
-                e.stopPropagation();
+                "drop",
+                (e) => {
+                    // remove event propagation
+                    e.preventDefault();
+                    e.stopPropagation();
 
-                // Remove style
-                e.target.parentElement.style.borderStyle = "none";
+                    // Remove style
+                    e.target.parentElement.parentElement.style.borderStyle = "none";
+                    e.target.parentElement.style.borderStyle = "none";
+                    
 
-                // Check pathupload
-                if(me.pathupload==""){
-                    alert("Set path upload with menu contextuel")
-                    return
-                }
-
-                const files = event.dataTransfer.items;
-                const fileArray = [];
-
-                // Get all fileEntry
-                for (let i = 0; i < files.length; i++) {
-                    const entry = files[i].webkitGetAsEntry();
-                    fileArray.push(entry);
-                }
-
-                // Get all fileEntry
-                processFiles(fileArray);
-                function processFiles(files) {
-                    for (let i = 0; i < files.length; i++) {
-                        const entry = files[i];
-                        if (entry.isFile) {
-                            readFile(entry);
-                        } else if (entry.isDirectory) {
-                            readDirectory(entry.createReader());
-                        }
+                    // Check pathupload
+                    if(me.pathupload==""){
+                        alert("Set path upload with menu contextuel")
+                        return
                     }
-                }
 
-                // Read dir
-                function readDirectory(reader) {
-                    reader.readEntries(function(entries) {
-                        for (let i = 0; i < entries.length; i++) {
-                            const entry = entries[i];
+                    const files = event.dataTransfer.items;
+                    const fileArray = [];
+
+                    // Get all fileEntry
+                    for (let i = 0; i < files.length; i++) {
+                        const entry = files[i].webkitGetAsEntry();
+                        fileArray.push(entry);
+                    }
+
+                    // Get all fileEntry
+                    processFiles(fileArray);
+                    function processFiles(files) {
+                        for (let i = 0; i < files.length; i++) {
+                            const entry = files[i];
                             if (entry.isFile) {
                                 readFile(entry);
                             } else if (entry.isDirectory) {
                                 readDirectory(entry.createReader());
                             }
                         }
-                    });
-                }
+                    }
 
-
-                // Get dir of file
-                function getDir(filePath) {
-                    const parts = filePath.split('/');
-                    parts.pop();
-                    let folderPath = parts.join('/');               
-                    return folderPath;
-                }
-                
-                // send file
-                function readFile(fileEntry) {
-                    fileEntry.file(function(file) {
-                        const formData = new FormData();
-                        formData.append('file', file);
-
-                        console.log(fileEntry);
-
-                        // Exemple avec Fetch :
-                        fetch('/uploadFile?sessionNumber='+me.terminalVue.sessionNumber+"&pathDir="+
-                                    encodeURI(me.pathupload)+
-                                    "/"+getDir(fileEntry.fullPath), {
-                            method: 'POST',
-                            body: formData
-                        })
-                        .then(response => {
-                            if (response.ok) {
-                                console.log('Fichier envoyé avec succès');
-                                this.terminalVue.$refs.info.html("File send successfull.");
-                            } else {
-                                this.terminalVue.$refs.info.html("File not send .");
+                    // Read dir
+                    function readDirectory(reader) {
+                        reader.readEntries(function(entries) {
+                            for (let i = 0; i < entries.length; i++) {
+                                const entry = entries[i];
+                                if (entry.isFile) {
+                                    readFile(entry);
+                                } else if (entry.isDirectory) {
+                                    readDirectory(entry.createReader());
+                                }
                             }
                         });
-                        
-                    });
-                }
-            },
-            false
-        )
+                    }
+
+
+                    // Get dir of file
+                    function getDir(filePath) {
+                        const parts = filePath.split('/');
+                        parts.pop();
+                        let folderPath = parts.join('/');               
+                        return folderPath;
+                    }
+                    
+                    // send file
+                    function readFile(fileEntry) {
+                        fileEntry.file(function(file) {
+                            const formData = new FormData();
+                            formData.append('file', file);
+
+                            console.log(fileEntry);
+
+                            // Exemple avec Fetch :
+                            fetch('/uploadFile?sessionNumber='+me.terminalVue.sessionNumber+"&pathDir="+
+                                        encodeURI(me.pathupload)+
+                                        "/"+getDir(fileEntry.fullPath), {
+                                method: 'POST',
+                                body: formData
+                            })
+                            .then(response => {
+                                if (response.ok) {
+                                    console.log('Fichier envoyé avec succès');
+                                    this.terminalVue.$refs.info.html("File send successfull.");
+                                } else {
+                                    this.terminalVue.$refs.info.html("File not send .");
+                                }
+                            });
+                            
+                        });
+                    }
+                },
+                false
+            )
         });
     }
 
@@ -259,8 +271,6 @@ class Ssh {
 
     // Menucontextuel: return menu for configure drap and drop
     showContextMenu(e){
-        console.log("TerminalSsh: contextMenu:",this.terminalVue,e);
-        //document.getElementById(this.terminalVue.id).querySelector("textarea").focus();
         return         [
             {
                 name: 'Download path',
@@ -270,6 +280,10 @@ class Ssh {
                 name: 'Set Dir Upload',
                 slug: 'remove-star',
             },
+            {
+                name: 'Copy',
+                slug: 'copy',
+            }
         ];
     }
 
@@ -283,6 +297,8 @@ class Ssh {
                 this.downloadFile(encodeURI("/downloadFile?sessionNumber="+sessionNumber+"&path="+text),"download")
             case "Set Dir Upload":
                 this.pathupload=text;
+            case "Copy":
+                navigator.clipboard.writeText(text);
             default:
                 console.error("RemoteSsh: menucontexuelClick: ",item.name)
         }
@@ -310,6 +326,7 @@ class Ssh {
     }
 
 
+    // Get File
     downloadFile(url, nomFichier) {
         const downloadLink = document.createElement('a');
         downloadLink.href = url;

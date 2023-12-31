@@ -5,7 +5,7 @@
       <TabPanels/>
     </VMain>
 
-    <ModalConfigurationConnection v-show="showModalConfigurationConnection"  @close="modalConfigurationConnectionClose"/>
+    <ModalConfigurationConnection v-show="showModalConfigurationConnection"  @close="modalConfigurationConnectionClose" v-bind:record="recordConnexionSelected" />
     <ModalMessage v-show="showModalMessage" :title="modalMessageTitle" :message="modalMessageBody" @close="modalMessageClose"/>
 
     <div v-if="lostConnection" style="justify-content: center;align-items: center;background-color: gray;z-index: 1500;position:absolute;display:flex;width: 100%;height: 100%;  margin: auto;">
@@ -72,13 +72,18 @@ export default {
   },
 
   data: () => ({
+    // Show model
     showModalConfigurationConnection: false,
-
     showModalMessage: false,
+
+    // Add modal message
     modalMessageTitle: "",
     modalMessageBody: "",
     
+    // Connexion lost ws close application
     lostConnection: false,
+
+    recordConnexionSelected:"",
   }),
 
   methods:{
@@ -91,7 +96,7 @@ export default {
   },
 
   mounted:function(){
-
+    this.recordConnexionSelected="";
     // Add script from plugin
     const scriptlocale = document.createElement("script");
     scriptlocale.setAttribute(
@@ -111,8 +116,9 @@ export default {
       app.lostConnection=true;
     })
 
-    eventBus.$on("ShowModalConfigurationConnection", () => {
+    eventBus.$on("ShowModalConfigurationConnection", (recordServer) => {
       this.showModalConfigurationConnection=true;
+      this.recordConnexionSelected=recordServer;
     })
 
     eventBus.$on("ShowModalMessage", (title,body) => {

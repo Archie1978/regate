@@ -34,13 +34,16 @@
             -->
             <v-list-item dense v-for="server in servers"  ref="listServer" prepend-icon="mdi-server" :value="server.id" v-bind:key="server.id" >
               <v-row align="center" justify="space-between" >
-                <!-- Personnalisez le contenu de l'élément de liste ici -->
+                <!-- List of servers reported by the app via the websocket -->
                 <v-list-item-content>
                   <v-list-item-title class="item-margin" @click="clickItemServer(server)" >{{ server.name }}
                   </v-list-item-title>
                 </v-list-item-content>
                 <v-list-item-action  class="ml-auto">
-                  <!-- Ajoutez le bouton à l'intérieur de l'élément de liste -->
+                  <!-- Add the button inside the list item -->
+                  <v-btn icon @click="modifyItemServer(server)">
+                    <v-icon color="red darken-2">mdi-pencil</v-icon>
+                  </v-btn>
                   <v-btn icon @click="deleteItemServer(server)">
                     <v-icon color="red darken-2">mdi-delete</v-icon>
                   </v-btn>
@@ -150,6 +153,12 @@ export default {
         console.log("menu click:",this,menuItem,menuItem.serverID)
         this.$ws.createSessionMenu=menuItem;
         this.$ws.getStartSession(menuItem.typeProcotol,"Id:"+menuItem.serverID)
+    },
+
+    // Modify connexion server
+    modifyItemServer:function(server){
+      console.log("modify:",server);
+      eventBus.$emit('ShowModalConfigurationConnection',server);
     },
 
     // Delete connexion
