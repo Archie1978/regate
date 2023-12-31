@@ -183,8 +183,9 @@ export default {
             var arrayserverLength = data.Servers.length;
             for (var j = 0; j < arrayserverLength; j++) {
               var dataServer=data.Servers[j];
-              var u=new URL("/",dataServer.URL);
-              var protocol=(u.protocol).slice(0, -1);
+
+              // Get protocol
+              var protocol = dataServer.URL.split(":")[0];
               
               console.log("dataServer",dataServer);
               // eslint-disable-next-line
