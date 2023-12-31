@@ -15,10 +15,12 @@ import (
 	"github.com/Archie1978/regate/authentification"
 	"github.com/Archie1978/regate/authentification/authentificationFlat"
 	"github.com/Archie1978/regate/authentification/authentificationNone"
+
 	"github.com/Archie1978/regate/configuration"
 	"github.com/Archie1978/regate/database"
 	"github.com/Archie1978/regate/version"
 	"github.com/Archie1978/regate/webservice"
+
 	"github.com/pkg/browser"
 	"github.com/takama/daemon"
 	"github.com/tomatome/grdp/glog"
@@ -134,6 +136,8 @@ func (service *Service) Manage() (string, error) {
 				<-time.After(5 * time.Second)
 			}
 		}()
+	case *authentificationNone.AuthentificationNone:
+		browser.OpenURL(configuration.ConfigurationGlobal.GetConnectURL())
 	default:
 	}
 
