@@ -12,7 +12,9 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/Archie1978/regate/authentification"
 	"github.com/Archie1978/regate/authentification/authentificationFlat"
+	"github.com/Archie1978/regate/authentification/authentificationNone"
 	"github.com/Archie1978/regate/configuration"
 	"github.com/Archie1978/regate/database"
 	"github.com/Archie1978/regate/version"
@@ -75,6 +77,8 @@ func (service *Service) Manage() (string, error) {
 	if len(os.Args) > 1 {
 		command := os.Args[1]
 		switch command {
+		case "unsafe":
+			authentification.AddDriver(&authentificationNone.AuthentificationNone{})
 		case "version":
 			return service.Version()
 		default:

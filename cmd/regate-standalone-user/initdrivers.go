@@ -9,6 +9,8 @@ import (
 	"github.com/Archie1978/regate/drivers/sshDriver"
 )
 
+var UNSAFE bool
+
 func init() {
 	// Init Driver connection
 	drivers.AddDriver(&rdpDriver.ProcessRdp{})
@@ -16,4 +18,5 @@ func init() {
 
 	// Init Driver authentification
 	authentification.AddDriver(&authentificationFlat.AuthentificationFlat{})
+
 }
