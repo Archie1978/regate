@@ -2,6 +2,7 @@ package database
 
 import (
 	"errors"
+	"net/url"
 	"strings"
 
 	"gorm.io/gorm"
@@ -137,6 +138,17 @@ func GetServerGroupComposit() (ServerGroupComposit, error) {
 	// get servers
 	var servers Servers
 	DB.Model(&Server{}).Find(&servers)
+
+	// Remove password
+	for i, _ := range servers {
+		u, err := url.Parse(servers[i].URL)
+		if err == nil {
+			if u.User != nil {
+				u.User = url.UserPassword(u.User.Username(), "Regate: N/A")
+			}
+		}
+		servers[i].URL = u.String()
+	}
 
 	// get group
 	var serverGroups ServerGroups
