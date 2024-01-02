@@ -19,8 +19,8 @@
                 <button @click="menucontexuelClick(  item )" style="width:100%" > {{ item.name }}</button>
             </template>
         </div>
+        <div ref="info"></div>
     </v-row>
-    <div ref="info"></div>
 </template>
 
 <style>
