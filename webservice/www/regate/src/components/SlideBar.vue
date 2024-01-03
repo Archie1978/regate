@@ -128,11 +128,11 @@ export default {
       switch(type){
 
         case "addConnexion":
-          eventBus.$emit('ShowModalConfigurationConnection');
+          eventBus.$emit('ShowModalConfigurationConnection',{});
           break;
 
         case "directly":
-          eventBus.$emit('ShowModalConfigurationConnection');
+          eventBus.$emit('ShowModalConfigurationConnection',{});
           break;
 
         case "welcome":
@@ -192,6 +192,7 @@ export default {
               if(listPlugin[protocol]){
                 var objectMenuServer={
                   id:dataServer.ID,
+                  URL: dataServer.URL,
                   name:dataServer.Name,
                   typeProcotol:protocol.charAt(0).toUpperCase() + protocol.slice(1),
                   serverID:dataServer.ID,

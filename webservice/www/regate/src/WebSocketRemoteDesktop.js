@@ -22,10 +22,11 @@ export default class WebSocketRemoteDesktop {
         this.connection = new WebSocket(url);
         this.connection.onmessage = function(event) {
             var object=JSON.parse(event.data)
-            console.info("recept:",object);
+            console.info("recept WS:",object);
             switch(object.Command.toUpperCase()){
 
                 case "USER_PROFILE":
+                    // Get PRofile USER
                     console.log("Profil user arrived: ",object);
                     eventBus.$emit(object.Command, object.Msg);
                     break;

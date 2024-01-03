@@ -320,6 +320,7 @@ class Ssh {
         let encodedAuthority = `${encodeURIComponent(dataForm.user)}:${encodeURIComponent(dataForm.password)}@${encodeURIComponent(dataForm.host)}:${dataForm.port}`;
     
         return {
+            Id: dataForm.Id,
             Name: dataForm.name,
             URL:`${encodedSchema}://${encodedAuthority}`
         }

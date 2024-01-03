@@ -250,6 +250,12 @@ func wshandler(c *gin.Context) {
 						server.ServerGroupID = 1
 					}
 
+					// Id
+					if _, ok := options["Id"]; ok {
+						i, _ := strconv.Atoi(fmt.Sprintf("%v", options["Id"]))
+						server.ID = uint(i)
+					}
+
 					// Add password
 					server.URL, _ = updatePasswordInURL(fmt.Sprintf("%v", options["URL"]))
 

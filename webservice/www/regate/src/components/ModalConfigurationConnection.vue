@@ -6,7 +6,7 @@
     <div class="form">
       <div class="form-row">
         <div>Connection Name:</div>
-        <input v-model="name" placeholder="edit me" />
+        <input v-model="Name" placeholder="edit me" />
       </div>
         <div class="form-row">
           <div>Protocol: </div>
@@ -158,12 +158,47 @@ button {
 export default {
   name: "ModalConfigurationConnection",
   components: { },
-  props: {},
+  
   methods: {
+
+    handleShowEvent(){
+      console.log("====Show");
+    },
+
+    // Close dial
     closeDialog() {
       this.$emit('close');
     },
+
+
+    // Set recorrd
+    setRecord(recordServer){
+      
+      console.log("==== set record",recordServer);
+      this.Name=recordServer.name;
+
+      // Get protocole
+      const urlProtocol = new URL(recordServer.URL);
+      this.protocol=urlProtocol.protocol.slice(0, -1);
+
+      // Get other information replace juste first element by http
+      let urlStringModified = recordServer.URL.replace(this.protocol, "http");
+      let ur1Modified=new URL(urlStringModified);
+
+      console.log(ur1Modified);
+      this.Id=recordServer.id;
+
+      this.host=decodeURI(ur1Modified.hostname);
+      this.user=decodeURI(ur1Modified.username);
+      this.password=decodeURI(ur1Modified.password) ;
+    },
+
+
+
+    // Validate information
     valid() {
+      console.log("==========>",this.record);
+
       //this.$emit('validate',this.data);
       if(this.name=="") {
             return ("Name of connection is empty")
@@ -186,20 +221,24 @@ export default {
       this.$emit('close');
     },
   },
+
+  // Change theme
   computed: {
     theme() {
       //return this.$store.state.userSettings.darkMode ? "dark" : "";
       return "dark";
     },
   },
+
+  // Data form
   data: () => ({
     "Id":0,
     "protocol":"",
-    "Port":0,
-    "PonnectionName":"",
-    "User":"",
-    "Domain":"",
-    "Password":"",
+    "port":0,
+    "name":"",
+    "user":"",
+    "domain":"",
+    "password":"",
   }),
 
 };

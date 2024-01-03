@@ -177,8 +177,7 @@ export default {
   },
   watch: {
     tab() {
-
-      console.log("tab:",this,this.tab);
+      // Get change tab
       let tab = this.getCurrentTab();
       if(!tab){
         return "";

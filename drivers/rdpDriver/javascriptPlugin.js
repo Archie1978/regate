@@ -222,6 +222,7 @@ class RDP {
 
 //        return `${encodedSchema}://${encodedAuthority}${encodedPath}?${encodedQuery}#${encodedFragment}`;
         return {
+            Id: dataForm.Id,
             Name: dataForm.name,
             URL:`${encodedSchema}://${encodedAuthority}`    
         }

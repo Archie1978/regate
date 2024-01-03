@@ -5,8 +5,17 @@
       <TabPanels/>
     </VMain>
 
-    <ModalConfigurationConnection v-show="showModalConfigurationConnection"  @close="modalConfigurationConnectionClose" v-bind:record="recordConnexionSelected" />
-    <ModalMessage v-show="showModalMessage" :title="modalMessageTitle" :message="modalMessageBody" @close="modalMessageClose"/>
+    <ModalConfigurationConnection
+      v-show="showModalConfigurationConnection"
+      @close="modalConfigurationConnectionClose"
+      ref="modalConfigurationConnection"
+    />
+
+    <ModalMessage v-show="showModalMessage"
+      :title="modalMessageTitle"
+      :message="modalMessageBody"
+      @close="modalMessageClose"
+    />
 
     <div v-if="lostConnection" style="justify-content: center;align-items: center;background-color: gray;z-index: 1500;position:absolute;display:flex;width: 100%;height: 100%;  margin: auto;">
       <div>
@@ -58,7 +67,6 @@ import TabPanels from "./components/TabPanels.vue"
 import eventBus from './eventBus'
 import ModalConfigurationConnection from './components/ModalConfigurationConnection.vue'
 import ModalMessage from './components/ModalMessage.vue'
-
 
 
 export default {
@@ -117,7 +125,9 @@ export default {
     })
 
     eventBus.$on("ShowModalConfigurationConnection", (recordServer) => {
+      console.log("ShowModalConfigurationConnection show",recordServer  );
       this.showModalConfigurationConnection=true;
+      this.$refs.modalConfigurationConnection.setRecord(recordServer);
       this.recordConnexionSelected=recordServer;
     })
 
