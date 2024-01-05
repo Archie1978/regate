@@ -48,25 +48,45 @@ SSH:
 1. cd cmd/regate-standalone-user
 2. go build -a
 
-## Build Daemon mode bastion/mutiuser ( step 2)
+## Build Daemon mode bastion/mutiuser ( step 2, Not Yet )
 1. cd cmd/regate-daemon/
 2. go build -a 
 
 
 ## Release
-Version: 0.1.0
+Version: 0.2.0
 Version init
 
 ## Use Case
 Browser:
 * firefox 119.0 (64 bits)
+* Chromium 120.0 ( 64 bits)
 
 OS:
 * Linux Ubuntu 22.04 
 * Linux Ubuntu 18.04 
 
+## file "configuration.json"
+
+## authentification flat ( standalone: default) When you started application, Regate starts the default WEB browser.
+{
+	"Listen": 42O3,
+	"Authentification":"flat:///",
+	"KeyCrypt": "L+wz1QjOUhTXDvflXXOFfw=="
+}
+
+## authentification unsafe Application ( NOT RECOMMENDED )
+{
+	"Listen": 42O3,
+	"Authentification":"none:///",
+	"KeyCrypt": "L+wz1QjOUhTXDvflXXOFfw=="
+}
+Start regate with cmd/regate-standalone-user/regate-standalone-user unsafe
+
+
 ## Plan dev Next
 * Interface installation ( standalone )
+* Secure SSH/RDP for recogned server ( FingerPrint / SSH )
 * Use Regate standalone by user linux/Windows
 * One binary HTML is into binary
 * Use Regate multiuser (bastion) connexion LDAP

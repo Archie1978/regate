@@ -32,7 +32,7 @@ const (
 
 	// name of the service
 	name        = "regate-standalone"
-	description = "Regate: Webervice remote desktop via eb browser"
+	description = "Regate: Webervice remote desktop via web browser"
 
 	// port which daemon should be listen
 	port = "localhost:8354"
