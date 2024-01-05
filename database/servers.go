@@ -2,9 +2,12 @@ package database
 
 import (
 	"errors"
+	"fmt"
 	"net/url"
 	"strings"
 
+	"github.com/Archie1978/regate/configuration"
+	"github.com/Archie1978/regate/crypto"
 	"gorm.io/gorm"
 )
 
@@ -112,7 +115,7 @@ func SavePathSubGroup(listNameGroup []string, sgParent *ServerGroup) (*ServerGro
 	return SavePathSubGroup(listNameGroup[1:], &sg)
 }
 
-// Save Servers
+// Save Server
 func SaveServer(pathGroup string, server *Server) error {
 
 	groupFinal, err := SavePathGroup(pathGroup)
@@ -124,9 +127,73 @@ func SaveServer(pathGroup string, server *Server) error {
 	ret := DB.Save(&server)
 
 	return ret.Error
-
 }
 
+// Update Password
+func (server *Server) UpdatePassword(passwordClear string) error {
+	// Split l'URL
+	u, err := url.Parse(server.URL)
+	if err != nil {
+		return err
+	}
+
+	// Get All information from USER with password into URL
+	userInfo := u.User
+	if userInfo != nil {
+
+		// Replace the password by the new crypted password
+		newUserInfo := url.UserPassword(userInfo.Username(), crypto.CryptPasswordString(passwordClear, configuration.ConfigurationGlobal.KeyCrypt))
+		u.User = newUserInfo
+
+		// Rebuild URL with new password
+		server.URL = u.String()
+
+		return nil
+	}
+
+	return fmt.Errorf("L'URL ne contient pas d'informations d'utilisateur (mot de passe)")
+}
+
+// Extract Password
+func (server *Server) GetPassword() (passwordClear string, err error) {
+
+	// Split l'URL
+	u, err := url.Parse(server.URL)
+	if err != nil {
+		return "", err
+	}
+
+	//  Get All information USER for extract pass clear.
+	userInfo := u.User
+	if userInfo != nil {
+		pass, _ := u.User.Password()
+		return crypto.DecryptPasswordString(pass, configuration.ConfigurationGlobal.KeyCrypt), nil
+	}
+
+	return "", nil
+}
+
+// Get URL Server without password useful for upping server to interface (BECAREFULL URL in change into server)
+func (server *Server) GetURLwithoutPassword() (string, error) {
+	// Extract l'URL
+	u, err := url.Parse(server.URL)
+	if err != nil {
+		return "", err
+	}
+
+	// Get All informations user and remove password
+	userInfo := u.User
+	if userInfo != nil {
+		userInfoWithoutPassword := url.User(userInfo.Username())
+		u.User = userInfoWithoutPassword
+	}
+
+	return u.String(), nil
+}
+
+/*
+ *   Composite stuctures
+ */
 // Get All servers by composit
 type ServerGroupComposit struct {
 	ServerGroup
@@ -134,6 +201,7 @@ type ServerGroupComposit struct {
 	Servers             Servers
 }
 
+// Get All composite into database, use for menu
 func GetServerGroupComposit() (ServerGroupComposit, error) {
 	// get servers
 	var servers Servers

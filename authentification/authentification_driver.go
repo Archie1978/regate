@@ -5,7 +5,9 @@ import (
 	"net/url"
 	"reflect"
 	"strings"
+	"sync"
 
+	"github.com/Archie1978/regate/configuration"
 	"github.com/Archie1978/regate/database"
 	"github.com/gin-gonic/gin"
 	"golang.org/x/text/cases"
@@ -15,6 +17,10 @@ import (
 // Liste of driver remote protocol
 var listDriverAuthentfication map[string]DriverAuthentfication
 
+var authConf DriverAuthentfication
+var authLocker sync.Mutex
+
+// Interface Authentification
 type DriverAuthentfication interface {
 	New(*url.URL) DriverAuthentfication
 	Authgin() gin.HandlerFunc
@@ -22,8 +28,10 @@ type DriverAuthentfication interface {
 	GetProfile(c *gin.Context) (*database.UserProfile, error)
 }
 
+// Init list drivers authentification
 func init() {
 	listDriverAuthentfication = make(map[string]DriverAuthentfication)
+
 }
 
 // Add driver
@@ -56,4 +64,15 @@ func ListDriver() (list []string) {
 		list = append(list, key)
 	}
 	return
+}
+
+// Get driver authentification, create Object If not existe
+func GetAuthentification() (auth DriverAuthentfication, err error) {
+	authLocker.Lock()
+	defer authLocker.Unlock()
+
+	if authConf == nil {
+		authConf, err = GetDriverURL(configuration.ConfigurationGlobal.Authentification)
+	}
+	return authConf, err
 }

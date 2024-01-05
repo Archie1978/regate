@@ -6,14 +6,12 @@ import (
 	"log"
 	"math/rand"
 	"net/http"
-	"net/url"
 	"reflect"
 	"strconv"
 	"strings"
 
 	"github.com/Archie1978/regate/authentification"
 	"github.com/Archie1978/regate/configuration"
-	"github.com/Archie1978/regate/crypto"
 	"github.com/Archie1978/regate/database"
 	"github.com/Archie1978/regate/drivers"
 
@@ -27,6 +25,7 @@ import (
 
 var AuthentificationWeb authentification.DriverAuthentfication
 
+// Start all service
 func StartWebservice() {
 	router := gin.Default()
 
@@ -38,10 +37,11 @@ func StartWebservice() {
 
 }
 
+// init interne service
 func initService(router *gin.Engine) {
 
 	// Get authentification
-	AuthentificationWeb, err := configuration.ConfigurationGlobal.GetAuthentification()
+	AuthentificationWeb, err := authentification.GetAuthentification()
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -72,6 +72,8 @@ func initService(router *gin.Engine) {
 	router.GET("/addon-local.js", funcRouterJavascriptRM)
 
 }
+
+// upload javascript from drivers
 func funcRouterJavascriptRM(c *gin.Context) {
 	content := `
 		var listPlugin=new Object();
@@ -88,6 +90,7 @@ var wsupgrader = websocket.Upgrader{
 	WriteBufferSize: 1024,
 }
 
+// Add websocket into map
 func AddSocket(ws *websocket.Conn) (slotNumber int) {
 	for {
 		i := rand.Int()
@@ -99,6 +102,7 @@ func AddSocket(ws *websocket.Conn) (slotNumber int) {
 	return -1
 }
 
+// Delete socket
 func DelSocket(slotNumber int) {
 	delete(listWS, slotNumber)
 }
@@ -122,33 +126,6 @@ type MessageRTM struct {
 
 var listSession map[int]drivers.DriverRP
 
-// get password into URL server (move into server)
-func updatePasswordInURL(inputURL string) (string, error) {
-	// Analyser l'URL
-	u, err := url.Parse(inputURL)
-	if err != nil {
-		return "", err
-	}
-
-	// Obtenir les informations d'utilisateur (y compris le mot de passe) de l'URL
-	userInfo := u.User
-	if userInfo != nil {
-		// Extraire le mot de passe actuel
-		currentPassword, _ := userInfo.Password()
-
-		// Remplacer le mot de passe actuel par le nouveau mot de passe
-		newUserInfo := url.UserPassword(userInfo.Username(), crypto.CryptPasswordString(currentPassword))
-		u.User = newUserInfo
-
-		// Reconstruire l'URL modifié
-		modifiedURL := u.String()
-
-		return modifiedURL, nil
-	}
-
-	return "", fmt.Errorf("L'URL ne contient pas d'informations d'utilisateur (mot de passe)")
-}
-
 // Get wsHandler for webservice
 func wshandler(c *gin.Context) {
 	w := c.Writer
@@ -165,7 +142,7 @@ func wshandler(c *gin.Context) {
 	defer connexionWebsocket.Close()
 
 	// Get authentification
-	AuthentificationWeb, err := configuration.ConfigurationGlobal.GetAuthentification()
+	AuthentificationWeb, err := authentification.GetAuthentification()
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -240,9 +217,17 @@ func wshandler(c *gin.Context) {
 
 					var server database.Server
 					server.Name = fmt.Sprintf("%v", options["Name"])
+					server.URL = fmt.Sprintf("%v", options["URL"])
+
+					// Set Server Group for furtur dev
 					if sgi, ok := options["ServerGroupId"]; ok {
 						v, _ := strconv.Atoi(fmt.Sprintf("%v", sgi))
 						server.ServerGroupID = uint(v)
+					}
+					// Update ID
+					if _, ok := options["Id"]; ok {
+						i, _ := strconv.Atoi(fmt.Sprintf("%v", options["Id"]))
+						server.ID = uint(i)
 					}
 
 					// Add server GroupRoot
@@ -250,15 +235,25 @@ func wshandler(c *gin.Context) {
 						server.ServerGroupID = 1
 					}
 
-					// Id
-					if _, ok := options["Id"]; ok {
-						i, _ := strconv.Atoi(fmt.Sprintf("%v", options["Id"]))
-						server.ID = uint(i)
+					// Password not change get old server
+					passwordclear, _ := server.GetPassword()
+					if passwordclear == "Regate%3A N%2FA" && server.ID != 0 {
+
+						// Get the old Password if not change
+						serverIntoDB, err := database.GetServerById(int(server.ID))
+						if err == nil {
+							password, _ := serverIntoDB.GetPassword()
+							server.UpdatePassword(password)
+						}
+
+					} else {
+
+						// Password change so crypt this
+						err := server.UpdatePassword(passwordclear)
+						fmt.Println(err)
 					}
 
-					// Add password
-					server.URL, _ = updatePasswordInURL(fmt.Sprintf("%v", options["URL"]))
-
+					// Save database
 					ret := database.DB.Save(&server)
 					if ret.Error != nil {
 						chanelWebSocket <- MessageRTM{Command: "ERROR", Msg: ret.Error}

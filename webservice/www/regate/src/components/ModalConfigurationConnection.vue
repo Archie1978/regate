@@ -6,7 +6,7 @@
     <div class="form">
       <div class="form-row">
         <div>Connection Name:</div>
-        <input v-model="Name" placeholder="edit me" />
+        <input v-model="name" placeholder="edit me" />
       </div>
         <div class="form-row">
           <div>Protocol: </div>
@@ -171,11 +171,9 @@ export default {
     },
 
 
-    // Set recorrd
+    // Set form by server recorder
     setRecord(recordServer){
-      
-      console.log("==== set record",recordServer);
-      this.Name=recordServer.name;
+      this.name=recordServer.name;
 
       // Get protocole
       const urlProtocol = new URL(recordServer.URL);
@@ -184,8 +182,6 @@ export default {
       // Get other information replace juste first element by http
       let urlStringModified = recordServer.URL.replace(this.protocol, "http");
       let ur1Modified=new URL(urlStringModified);
-
-      console.log(ur1Modified);
       this.Id=recordServer.id;
 
       this.host=decodeURI(ur1Modified.hostname);
@@ -197,18 +193,19 @@ export default {
 
     // Validate information
     valid() {
-      console.log("==========>",this.record);
-
+      
       //this.$emit('validate',this.data);
       if(this.name=="") {
-            return ("Name of connection is empty")
+        alert("name of connection is empty")
+        return
       }
       // eslint-disable-next-line
       if(!listPlugin[this.protocol]){
-        alert("protocol unkonw") ;
+        alert("protocol unknown") ;
         return;
       }
 
+      // Encode configuration into URL by plugin
       // eslint-disable-next-line
       var dataWS=listPlugin[this.protocol].encodeConfiguration(this);
       console.log(typeof dataws)

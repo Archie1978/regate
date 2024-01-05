@@ -13,6 +13,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/Archie1978/regate/configuration"
 	"github.com/Archie1978/regate/crypto"
 	"github.com/gin-gonic/gin"
 
@@ -77,11 +78,11 @@ func (processSSh *ProcessSsh) Start(chanelWebSocket chan interface{}, numeroSess
 }
 
 func (processSSh *ProcessSsh) startSSh() {
-
+	fmt.Println("ProcessSsh) startSSh", crypto.DecryptPasswordString(processSSh.msgConnect.Password, configuration.ConfigurationGlobal.KeyCrypt))
 	config := &ssh.ClientConfig{
 		User: processSSh.msgConnect.Username,
 		Auth: []ssh.AuthMethod{
-			ssh.Password(crypto.DecryptPasswordString(processSSh.msgConnect.Password)),
+			ssh.Password(crypto.DecryptPasswordString(processSSh.msgConnect.Password, configuration.ConfigurationGlobal.KeyCrypt)),
 		},
 		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
 	}

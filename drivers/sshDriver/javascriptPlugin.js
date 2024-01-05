@@ -313,8 +313,8 @@ class Ssh {
         if(dataForm.host==""||dataForm.host==undefined) {
             return ("host is empty")
         }
-        if(dataForm.port==""||dataForm.port==undefined) {
-            return ("port is empty")
+        if(dataForm.port=="" || dataForm.port==undefined){
+            dataForm.port=22;
         }
         let encodedSchema = encodeURIComponent("ssh");
         let encodedAuthority = `${encodeURIComponent(dataForm.user)}:${encodeURIComponent(dataForm.password)}@${encodeURIComponent(dataForm.host)}:${dataForm.port}`;

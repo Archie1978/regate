@@ -2,10 +2,17 @@ package webservice
 
 import (
 	"embed"
-	"fmt"
 	"net/http"
 	"path"
 )
+
+/*
+
+Service web file
+
+
+
+*/
 
 //go:embed www/regate/dist
 var systemFileInternal embed.FS
@@ -17,10 +24,10 @@ type ServeFileSystem struct {
 	prefix string
 }
 
+// check Exists file into  memory
 func (sfs *ServeFileSystem) Exists(prefix string, pathFile string) bool {
 	p := path.Join(sfs.prefix, pathFile)
 
-	fmt.Println("Check: ", p)
 	_, err := sfs.FileSystem.Open(p)
 	if err != nil {
 		return false
@@ -28,6 +35,7 @@ func (sfs *ServeFileSystem) Exists(prefix string, pathFile string) bool {
 	return true
 }
 
+// Open file into mémory
 func (sfs *ServeFileSystem) Open(pathFile string) (http.File, error) {
 	return sfs.FileSystem.Open(path.Join(sfs.prefix, pathFile))
 }

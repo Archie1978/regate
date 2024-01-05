@@ -6,10 +6,8 @@ import (
 	"log"
 	"os"
 	"strings"
-	"sync"
 	"time"
 
-	"github.com/Archie1978/regate/authentification"
 	"github.com/fsnotify/fsnotify"
 	"github.com/gin-gonic/gin"
 )
@@ -21,22 +19,9 @@ type Configuration struct {
 	Authentification string // method of authentification  type:   method://options
 	KeyCrypt         []byte
 	DatabasePath     string
-
-	auth       authentification.DriverAuthentfication
-	authLocker sync.Mutex
 }
 
 var ConfigurationGlobal Configuration
-
-// Get driver authentification, create Object If not existe
-func (configuration *Configuration) GetAuthentification() (conf authentification.DriverAuthentfication, err error) {
-	configuration.authLocker.Lock()
-	defer configuration.authLocker.Unlock()
-	if configuration.auth == nil {
-		configuration.auth, err = authentification.GetDriverURL(configuration.Authentification)
-	}
-	return configuration.auth, err
-}
 
 func (configuration *Configuration) GetConnectURL() (url string) {
 	if strings.HasPrefix(configuration.Listen, ":") {
@@ -141,5 +126,10 @@ func loadConfiguration(path string) error {
 	if ConfigurationGlobal.Listen == "" {
 		ConfigurationGlobal.Listen = ":5537"
 	}
+
+	if ConfigurationGlobal.KeyCrypt == nil {
+		return fmt.Errorf("KeyCrypt not configure into configuration.json")
+	}
+
 	return nil
 }

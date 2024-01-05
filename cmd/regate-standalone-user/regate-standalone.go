@@ -4,8 +4,10 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
+	"math/rand"
 	"net/url"
 	"os"
 	"os/signal"
@@ -79,8 +81,20 @@ func (service *Service) Manage() (string, error) {
 	if len(os.Args) > 1 {
 		command := os.Args[1]
 		switch command {
+
+		// Start application unsafe dont forget configuration
 		case "unsafe":
 			authentification.AddDriver(&authentificationNone.AuthentificationNone{})
+
+			// Generate Key crypt
+		case "generate-key":
+			keyCrypt := make([]byte, 16)
+			source := rand.NewSource(time.Now().Unix())
+			for i := 0; i < len(keyCrypt); i++ {
+				keyCrypt[i] = byte(source.Int63())
+			}
+			content, _ := json.Marshal(keyCrypt)
+			return string(content), nil
 		case "version":
 			return service.Version()
 		default:
@@ -95,7 +109,7 @@ func (service *Service) Manage() (string, error) {
 	}
 
 	// Get Authenfication
-	authweb, err := configuration.ConfigurationGlobal.GetAuthentification()
+	authweb, err := authentification.GetAuthentification()
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -174,6 +188,12 @@ func (service *Service) Stop() (string, error) {
 	return "Exit service", nil
 }
 
+func (service *Service) Version() (string, error) {
+	versionBinary := version.Version()
+	date := version.Date()
+	return fmt.Sprintf("Version:%v\nDate:%v\n", versionBinary, date.Format(time.RFC3339)), nil
+}
+
 func init() {
 	stdlog = log.New(os.Stdout, "", log.Ldate|log.Ltime)
 	errlog = log.New(os.Stderr, "", log.Ldate|log.Ltime)
@@ -182,12 +202,6 @@ func init() {
 	glog.SetLevel(glog.DEBUG)
 	logger := log.New(os.Stdout, "", 0)
 	glog.SetLogger(logger)
-}
-
-func (service *Service) Version() (string, error) {
-	versionBinary := version.Version()
-	date := version.Date()
-	return fmt.Sprintf("Version:%v\nDate:%v\n", versionBinary, date.Format(time.RFC3339)), nil
 }
 
 func main() {

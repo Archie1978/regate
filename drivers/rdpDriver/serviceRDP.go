@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Archie1978/regate/configuration"
 	"github.com/Archie1978/regate/drivers"
 	"github.com/gin-gonic/gin"
 	"github.com/mitchellh/mapstructure"
@@ -125,7 +126,7 @@ func (processRDP *ProcessRdp) startRDP(chanelWebSocket chan interface{}) {
 	info.Ip = msgConnect.Ip
 	info.Port = fmt.Sprintf("%v", msgConnect.Port)
 	info.Username = msgConnect.Username
-	info.Passwd = crypto.DecryptPasswordString(msgConnect.Password)
+	info.Passwd = crypto.DecryptPasswordString(msgConnect.Password, configuration.ConfigurationGlobal.KeyCrypt)
 	info.Screen.Height = msgConnect.Height
 	info.Screen.Width = msgConnect.Width
 	processRDP.g.info = &info

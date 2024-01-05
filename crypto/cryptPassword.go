@@ -8,13 +8,10 @@ import (
 	"fmt"
 	"log"
 	"strings"
-
-	"github.com/Archie1978/regate/configuration"
 )
 
 var (
 	initialVector = "1010101010101010"
-	passphrase    = []byte{0x31, 0x31, 0x31, 0x31, 0x31, 0x31, 0x31, 0x31, 0x31, 0x31, 0x31, 0x31, 0x31, 0x31, 0x31, 0x31, 0x31, 0x31, 0x31, 0x31, 0x31, 0x31, 0x31, 0x31, 0x31, 0x31, 0x31, 0x31, 0x31, 0x31, 0x31, 0x31}
 )
 
 func AESEncrypt(src string, key []byte) []byte {
@@ -56,20 +53,20 @@ func PKCS5Trimming(encrypt []byte) []byte {
 	return encrypt[:len(encrypt)-int(padding)]
 }
 
-func DecryptPasswordString(data string) string {
-	if strings.HasPrefix(data, "aes:") && len(configuration.ConfigurationGlobal.KeyCrypt) > 0 {
+func DecryptPasswordString(data string, keycrypt []byte) string {
+	if strings.HasPrefix(data, "aes:") && len(keycrypt) > 0 {
 		base64Code, err := base64.StdEncoding.DecodeString(data[4:])
 		if err != nil {
 			return ""
 		}
-		return string(AESDecrypt(base64Code, configuration.ConfigurationGlobal.KeyCrypt))
+		return string(AESDecrypt(base64Code, keycrypt))
 	}
 	return data
 }
 
-func CryptPasswordString(data string) string {
-	if len(configuration.ConfigurationGlobal.KeyCrypt) > 0 {
+func CryptPasswordString(data string, keycrypt []byte) string {
+	if len(keycrypt) == 0 {
 		log.Fatal("KeyCrypt not valid")
 	}
-	return "aes:" + base64.StdEncoding.EncodeToString(AESEncrypt(data, configuration.ConfigurationGlobal.KeyCrypt))
+	return "aes:" + base64.StdEncoding.EncodeToString(AESEncrypt(data, keycrypt))
 }
