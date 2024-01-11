@@ -78,7 +78,7 @@ func (processSSh *ProcessSsh) Start(chanelWebSocket chan interface{}, numeroSess
 }
 
 func (processSSh *ProcessSsh) startSSh() {
-	fmt.Println("ProcessSsh) startSSh", crypto.DecryptPasswordString(processSSh.msgConnect.Password, configuration.ConfigurationGlobal.KeyCrypt))
+	fmt.Println("ProcessSsh) startSSh")
 	config := &ssh.ClientConfig{
 		User: processSSh.msgConnect.Username,
 		Auth: []ssh.AuthMethod{

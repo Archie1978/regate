@@ -30,6 +30,7 @@ class Ssh {
         this.terminalVue=terminalVue;
         this.eventBus=eventBus;
         this.terminalElement=document.getElementById(terminalVue.id);
+        let me=this;
 
         // Create terminal
         this.terminal.open(this.terminalElement);
@@ -87,135 +88,155 @@ class Ssh {
         // Set stdout event
         this.stdout(this.eventBus,this.terminalVue.sessionNumber);
 
+        // Function frop files
+        function drop(e){
+            
+             // remove event propagation
+             e.preventDefault();
+             e.stopPropagation();
 
-        // Add event drop file
-        let rowElements = this.terminalVue.$refs.terminal.querySelectorAll("div");
-        let me=this;
-        rowElements.forEach(row => {
+             // Remove style
+             //me.newDiv.style.display="none";
 
+             // Check pathupload
+             if(me.pathupload==""){
+                 alert("Set path upload with menu contextuel")
+                 return
+             }
+
+             const files = event.dataTransfer.items;
+             const fileArray = [];
+
+             // Get all fileEntry
+             for (let i = 0; i < files.length; i++) {
+                 const entry = files[i].webkitGetAsEntry();
+                 fileArray.push(entry);
+             }
+
+             // Get all fileEntry
+             processFiles(fileArray);
+             function processFiles(files) {
+                 for (let i = 0; i < files.length; i++) {
+                     const entry = files[i];
+                     if (entry.isFile) {
+                         readFile(entry);
+                     } else if (entry.isDirectory) {
+                         readDirectory(entry.createReader());
+                     }
+                 }
+             }
+
+             // Read dir
+             function readDirectory(reader) {
+                 reader.readEntries(function(entries) {
+                     for (let i = 0; i < entries.length; i++) {
+                         const entry = entries[i];
+                         if (entry.isFile) {
+                             readFile(entry);
+                         } else if (entry.isDirectory) {
+                             readDirectory(entry.createReader());
+                         }
+                     }
+                 });
+             }
+
+
+             // Get dir of file
+             function getDir(filePath) {
+                 const parts = filePath.split('/');
+                 parts.pop();
+                 let folderPath = parts.join('/');               
+                 return folderPath;
+             }
+             
+             // send file
+             function readFile(fileEntry) {
+                 fileEntry.file(function(file) {
+                     const formData = new FormData();
+                     formData.append('file', file);
+
+                     console.log(fileEntry);
+
+                     // Exemple avec Fetch :
+                     fetch('/uploadFile?sessionNumber='+me.terminalVue.sessionNumber+"&pathDir="+
+                                 encodeURI(me.pathupload)+
+                                 "/"+getDir(fileEntry.fullPath), {
+                         method: 'POST',
+                         body: formData
+                     })
+                     .then(response => {
+                         if (response.ok) {
+                             console.log('Fichier envoyé avec succès');
+                             this.terminalVue.$refs.info.html("File send successfull.");
+                         } else {
+                             this.terminalVue.$refs.info.html("File not send .");
+                         }
+                     });
+                     
+                 });
+             }
+        }
+
+        // Add over
+        this.terminalVue.$refs.terminal.parentElement.addEventListener(
+            "dragover",
+            (e) => {
+                e.preventDefault();
+                terminalVue.$refs.terminal.style.borderColor = "red";
+                terminalVue.$refs.terminal.style.borderStyle = "solid";
+            }
+        );
+
+        // Add dragleave
+        this.terminalVue.$refs.terminal.parentElement.addEventListener(
+            "dragleave",
+            (e) => {
+                e.preventDefault();
+                terminalVue.$refs.terminal.style.borderColor = "transparent";
+            }
+        );
+
+        // Add drop files
+        this.terminalVue.$refs.terminal.parentElement.addEventListener(
+            "drop",
+            (e) => {
+                e.preventDefault()
+                drop(e);
+                terminalVue.$refs.terminal.style.borderColor = "transparent";
+            }
+        );
+        
+        /*
+        function addeventdrapanddrop(row){
             // Display red border
             row.addEventListener(
                 "dragover",
                 (e) => {
-                    // Ajuste
-                    if(!e.target.classList.contains("xterm-viewport")){
-                        // Add red into xterm
-                        if(e.target.parentElement.classList.contains("xterm-rows")) {
-                            e.target.parentElement.style.borderColor = "red";
-                            e.target.parentElement.style.borderStyle = "solid";
-                        }else{
-                            // It is a case xterm, up to xterm tag
-                            e.target.parentElement.parentElement.style.borderColor = "red";
-                            e.target.parentElement.parentElement.style.borderStyle = "solid";
-                        }
-                    }
+                    dragover(e.target);
                 }
             );
+        }
 
-            // Discard red border
-            row.addEventListener(
-                "dragleave",
-                (e) => {
-                    // Delete border without
-                    e.target.parentElement.style.borderStyle = "none";
-                    e.target.parentElement.parentElement.style.borderStyle = "none";
-                }
-            );
-
-            // Send file
-            row.addEventListener(
-                "drop",
-                (e) => {
-                    // remove event propagation
-                    e.preventDefault();
-                    e.stopPropagation();
-
-                    // Remove style
-                    e.target.parentElement.parentElement.style.borderStyle = "none";
-                    e.target.parentElement.style.borderStyle = "none";
-                    
-
-                    // Check pathupload
-                    if(me.pathupload==""){
-                        alert("Set path upload with menu contextuel")
-                        return
-                    }
-
-                    const files = event.dataTransfer.items;
-                    const fileArray = [];
-
-                    // Get all fileEntry
-                    for (let i = 0; i < files.length; i++) {
-                        const entry = files[i].webkitGetAsEntry();
-                        fileArray.push(entry);
-                    }
-
-                    // Get all fileEntry
-                    processFiles(fileArray);
-                    function processFiles(files) {
-                        for (let i = 0; i < files.length; i++) {
-                            const entry = files[i];
-                            if (entry.isFile) {
-                                readFile(entry);
-                            } else if (entry.isDirectory) {
-                                readDirectory(entry.createReader());
-                            }
-                        }
-                    }
-
-                    // Read dir
-                    function readDirectory(reader) {
-                        reader.readEntries(function(entries) {
-                            for (let i = 0; i < entries.length; i++) {
-                                const entry = entries[i];
-                                if (entry.isFile) {
-                                    readFile(entry);
-                                } else if (entry.isDirectory) {
-                                    readDirectory(entry.createReader());
-                                }
-                            }
-                        });
-                    }
-
-
-                    // Get dir of file
-                    function getDir(filePath) {
-                        const parts = filePath.split('/');
-                        parts.pop();
-                        let folderPath = parts.join('/');               
-                        return folderPath;
-                    }
-                    
-                    // send file
-                    function readFile(fileEntry) {
-                        fileEntry.file(function(file) {
-                            const formData = new FormData();
-                            formData.append('file', file);
-
-                            console.log(fileEntry);
-
-                            // Exemple avec Fetch :
-                            fetch('/uploadFile?sessionNumber='+me.terminalVue.sessionNumber+"&pathDir="+
-                                        encodeURI(me.pathupload)+
-                                        "/"+getDir(fileEntry.fullPath), {
-                                method: 'POST',
-                                body: formData
-                            })
-                            .then(response => {
-                                if (response.ok) {
-                                    console.log('Fichier envoyé avec succès');
-                                    this.terminalVue.$refs.info.html("File send successfull.");
-                                } else {
-                                    this.terminalVue.$refs.info.html("File not send .");
-                                }
-                            });
-                            
-                        });
-                    }
-                },
-                false
-            )
+        // Add event drop file
+        let rowElements = this.terminalVue.$refs.terminal.querySelectorAll("div");
+        var i=0;
+        rowElements.forEach(row => {
+            if(i==0){
+                console.log("========================================");
+                addeventdrapanddrop(row);
+            }
+            i++;
+            // Configurez l'observateur pour surveiller les modifications dans les enfants du nœud parent
+            //let config = { childList: true };
+            //this.observer.observe(row, config);
         });
+        */
+        /*
+        rowElements = this.terminalVue.$refs.terminal.querySelectorAll("span");
+        rowElements.forEach(row => {
+            addeventdrapanddrop(row);
+        });
+        */
     }
 
     base64ToArrayBuffer(base64) {
