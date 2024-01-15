@@ -14,6 +14,7 @@ import (
 	"github.com/Archie1978/regate/configuration"
 	"github.com/Archie1978/regate/database"
 	"github.com/Archie1978/regate/drivers"
+	"github.com/mitchellh/mapstructure"
 
 	"github.com/gin-contrib/static"
 	"github.com/gin-gonic/gin"
@@ -212,7 +213,7 @@ func wshandler(c *gin.Context) {
 
 			case "SaveConnection":
 				// Save connection
-				fmt.Println("SaveConnexion", messageRTM)
+				fmt.Println("SaveConnexion")
 				if options, ok := messageRTM.Msg.(map[string]interface{}); ok {
 
 					var server database.Server
@@ -365,6 +366,28 @@ func wshandler(c *gin.Context) {
 					s.Close()
 				}
 				delete(listSession, messageRTM.Session)
+
+			case "SettingSecurity":
+				recordSecurity, err := database.GetSettingSecurity()
+				if err != nil {
+					chanelWebSocket <- MessageRTM{Command: "ERROR", Msg: err}
+				}
+				chanelWebSocket <- MessageRTM{Command: "SETTING_SECURITY", Msg: recordSecurity}
+
+			case "SaveSettingSecurity":
+				var recordSecurity database.SettingSecurity
+				err := mapstructure.Decode(messageRTM.Msg, &recordSecurity)
+				if err != nil {
+					chanelWebSocket <- MessageRTM{Command: "ERROR", Msg: err}
+					return
+				}
+				err = database.SaveSettingSecurity(recordSecurity)
+				if err != nil {
+					chanelWebSocket <- MessageRTM{Command: "ERROR", Msg: err}
+					return
+				}
+				chanelWebSocket <- MessageRTM{Command: "SETTING_SECURITY", Msg: recordSecurity}
+
 			default:
 				// Default CMD
 				if s, ok := listSession[messageRTM.Session]; ok {
