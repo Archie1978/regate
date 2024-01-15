@@ -1,11 +1,14 @@
 package rdpDriver
 
 import (
+	"crypto/tls"
 	"fmt"
 	"log"
 	"net"
 	"time"
 
+	"github.com/Archie1978/regate/crypto"
+	"github.com/Archie1978/regate/database"
 	"github.com/tomatome/grdp/plugin"
 
 	"github.com/tomatome/grdp/core"
@@ -26,7 +29,8 @@ const (
 )
 
 type RdpClient struct {
-	Host     string // ip:port
+	Host string // ip:port
+
 	Width    int
 	Height   int
 	info     *Info
@@ -36,6 +40,12 @@ type RdpClient struct {
 	sec      *sec.Client
 	pdu      *pdu.Client
 	channels *plugin.Channels
+
+	// connection rdp secure or not ecure
+	conn net.Conn
+
+	// Connection TCP if is secure
+	connRaw net.Conn
 }
 
 func NewRdpClient(host string, width, height int, logLevel glog.LEVEL) *RdpClient {
@@ -55,15 +65,41 @@ func BitmapDecompress(bitmap *pdu.BitmapData) []byte {
 
 func (g *RdpClient) Login() error {
 
+	// Get security element
+	security, err := database.GetSettingSecurity()
+
 	domain, user, pwd := g.info.Domain, g.info.Username, g.info.Passwd
+
 	glog.Info("Connect:", g.Host, "with", domain+"\\"+user)
-	conn, err := net.DialTimeout("tcp", g.Host, 3*time.Second)
+	g.conn, err = net.DialTimeout("tcp", g.Host, 3*time.Second)
 	if err != nil {
 		return fmt.Errorf("[dial err] %v", err)
 	}
-	//defer conn.Close()
 
-	g.tpkt = tpkt.New(core.NewSocketLayer(conn), nla.NewNTLMv2(domain, user, pwd))
+	// Check certificate
+	if security.Cert_activate {
+
+		// Configuration TLS de base (peut nécessiter des ajustements en fonction du serveur)
+		tlsConfig := &tls.Config{
+			VerifyPeerCertificate: crypto.CheckCertificate(security.Cert_list, security.Cert_list),
+			InsecureSkipVerify:    true,
+		}
+
+		tlsConn := tls.Client(g.conn, tlsConfig)
+
+		// Handshake TLS
+		err = tlsConn.Handshake()
+		if err != nil {
+			return fmt.Errorf("Erreur lors du handshake TLS: %v", err)
+
+		}
+
+		// Switch connect to secure for application
+		g.connRaw = g.conn
+		g.conn = tlsConn
+	}
+
+	g.tpkt = tpkt.New(core.NewSocketLayer(g.conn), nla.NewNTLMv2(domain, user, pwd))
 	g.x224 = x224.New(g.tpkt)
 	g.mcs = t125.NewMCSClient(g.x224)
 	g.sec = sec.NewClient(g.mcs)
@@ -170,5 +206,12 @@ func (g *RdpClient) MouseDown(button int, x, y int) {
 func (g *RdpClient) Close() {
 	if g != nil && g.tpkt != nil {
 		g.tpkt.Close()
+	}
+	if g.conn != nil {
+		g.conn.Close()
+	}
+
+	if g.connRaw != nil {
+		g.connRaw.Close()
 	}
 }

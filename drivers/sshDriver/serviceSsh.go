@@ -15,6 +15,7 @@ import (
 
 	"github.com/Archie1978/regate/configuration"
 	"github.com/Archie1978/regate/crypto"
+	"github.com/Archie1978/regate/database"
 	"github.com/gin-gonic/gin"
 
 	"github.com/Archie1978/regate/drivers"
@@ -87,12 +88,22 @@ func (processSSh *ProcessSsh) startSSh() {
 		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
 	}
 
+	// Add security knownhost
+	setting, err := database.GetSettingSecurity()
+	if err == nil {
+		if setting.Kh_activate {
+
+			// Parse le fichier known_hosts
+			config.HostKeyCallback, err = NewBuffer([]byte(setting.Kh_list))
+
+		}
+	}
+
 	if processSSh.msgConnect.Port == 0 {
 		processSSh.msgConnect.Port = 22
 	}
 
 	// connect ot ssh server
-	var err error
 	host := fmt.Sprintf("%v:%v", processSSh.msgConnect.Ip, processSSh.msgConnect.Port)
 	processSSh.client, err = ssh.Dial("tcp", host, config)
 	if err != nil {

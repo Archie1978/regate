@@ -1,6 +1,8 @@
 package database
 
 import (
+	"log"
+
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
@@ -14,6 +16,12 @@ func OpenDatabase(pathdatabase string) error {
 		return err
 	}
 
-	DB.AutoMigrate(&ServerGroup{}, &Server{}, &UserProfile{})
+	DB.AutoMigrate(&ServerGroup{}, &Server{}, &UserProfile{}, &SettingSecurity{})
+
+	// Get Setting Security
+	_, err = GetSettingSecurity()
+	if err != nil {
+		log.Fatal(err)
+	}
 	return nil
 }

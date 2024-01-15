@@ -74,10 +74,9 @@
 
             -->
             <v-list-item prepend-icon="mdi-server-plus" title="Add Connection" value="add_conection" @click="clickItem('addConnexion')"></v-list-item>
-            
+            <v-list-item prepend-icon="mdi-settings-helper" title="Settings" value="settings" @click="clickItem('settings')"></v-list-item>
             <!--
             <v-list-item prepend-icon="mdi-connection" title="Directly" value="directly" @click="clickItem('directly')"></v-list-item>
-            <v-list-item prepend-icon="mdi-settings-helper" title="Settings" value="settings" @click="clickItem('settings')"></v-list-item>
             <v-list-item prepend-icon="mdi-exit-to-app" title="Exit" value="exit" ></v-list-item>
             -->
 
@@ -138,8 +137,8 @@ export default {
         case "welcome":
             this.$ws.tabPanel.addTabCustom("Welcome","Welcome",null);
             break;
-        case "setting":
-            this.$ws.tabPanel.addTabCustom("Setting","Setting",null);
+        case "settings":
+            this.$ws.tabPanel.addTabCustom("Settings","Settings",null);
             break;
 
         default:

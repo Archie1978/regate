@@ -31,6 +31,11 @@ export default class WebSocketRemoteDesktop {
                     eventBus.$emit(object.Command, object.Msg);
                     break;
 
+                case "SETTING_SECURITY":
+                        // Get PRofile USER
+                        console.log("Setting Security arrived: ",object);
+                        eventBus.$emit(object.Command, object.Msg);
+                        break;
                 case "STARTED":
                     //Create tab
                     console.log(me,me.createSessionMenu.protocolClass);
@@ -112,6 +117,19 @@ export default class WebSocketRemoteDesktop {
     getStartSession(typeProtocol,option){
         this.sendMessage({Command:"START",TypeProtocol:typeProtocol, Msg: option})
     }
+
+    // Save Setting Security
+    saveSettingSecurity(recordSecurity){
+        console.log(recordSecurity);
+        this.sendMessage({Command:"SaveSettingSecurity", Msg: recordSecurity})
+    }
+
+    // Get Setting Security
+    getSettingSecurity(recordSecurity){
+        console.log(recordSecurity);
+        this.sendMessage({Command:"SettingSecurity", Msg: recordSecurity})
+    }
+    
 
     // Send message into webservice
     sendMessage(object){
