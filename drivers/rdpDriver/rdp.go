@@ -1,24 +1,25 @@
 package rdpDriver
 
 import (
-	"crypto/tls"
 	"fmt"
 	"log"
 	"net"
 	"time"
 
+	"github.com/icodeface/tls"
+	"github.com/tomatome/grdp/core"
+	"github.com/tomatome/grdp/plugin"
 	"github.com/Archie1978/regate/crypto"
 	"github.com/Archie1978/regate/database"
-	"github.com/tomatome/grdp/plugin"
 
-	"github.com/tomatome/grdp/core"
-	"github.com/tomatome/grdp/glog"
-	"github.com/tomatome/grdp/protocol/nla"
-	"github.com/tomatome/grdp/protocol/pdu"
 	"github.com/tomatome/grdp/protocol/sec"
 	"github.com/tomatome/grdp/protocol/t125"
 	"github.com/tomatome/grdp/protocol/tpkt"
 	"github.com/tomatome/grdp/protocol/x224"
+
+	"github.com/tomatome/grdp/glog"
+	"github.com/tomatome/grdp/protocol/nla"
+	"github.com/tomatome/grdp/protocol/pdu"
 )
 
 const (
@@ -71,34 +72,44 @@ func (g *RdpClient) Login() error {
 	domain, user, pwd := g.info.Domain, g.info.Username, g.info.Passwd
 
 	glog.Info("Connect:", g.Host, "with", domain+"\\"+user)
+
 	g.conn, err = net.DialTimeout("tcp", g.Host, 3*time.Second)
 	if err != nil {
 		return fmt.Errorf("[dial err] %v", err)
 	}
 
-	// Check certificate
-	if security.Cert_activate {
-
-		// Configuration TLS de base (peut nécessiter des ajustements en fonction du serveur)
-		tlsConfig := &tls.Config{
-			VerifyPeerCertificate: crypto.CheckCertificate(security.Cert_list, security.Cert_list),
-			InsecureSkipVerify:    true,
-		}
-
-		tlsConn := tls.Client(g.conn, tlsConfig)
-
-		// Handshake TLS
-		err = tlsConn.Handshake()
+	/*	g.conn, err = net.DialTimeout("tcp", g.Host, 3*time.Second)
 		if err != nil {
-			return fmt.Errorf("Erreur lors du handshake TLS: %v", err)
-
+			return fmt.Errorf("[dial err] %v", err)
 		}
 
-		// Switch connect to secure for application
-		g.connRaw = g.conn
-		g.conn = tlsConn
-	}
+		// Check certificate
+		if security.Cert_activate {
 
+			// Configuration TLS de base (peut nécessiter des ajustements en fonction du serveur)
+			tlsConfig := &tls.Config{
+				VerifyPeerCertificate: crypto.CheckCertificate(security.Cert_list, security.Cert_list),
+				InsecureSkipVerify:    true,
+			}
+
+			tlsConn := tls.Client(g.conn, tlsConfig)
+
+			// Handshake TLS
+			err = tlsConn.Handshake()
+			if err != nil {
+				return fmt.Errorf("Erreur lors du handshake TLS: %v", err)
+
+			}
+
+			// Switch connect to secure for application
+			g.connRaw = g.conn
+			g.conn = tlsConn
+		}
+	*/
+	core.ConfigTLS = &tls.Config{
+		VerifyPeerCertificate: crypto.CheckCertificate(security.Cert_list, security.Cert_list),
+		InsecureSkipVerify:    true,
+	}
 	g.tpkt = tpkt.New(core.NewSocketLayer(g.conn), nla.NewNTLMv2(domain, user, pwd))
 	g.x224 = x224.New(g.tpkt)
 	g.mcs = t125.NewMCSClient(g.x224)
