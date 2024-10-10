@@ -23,5 +23,11 @@ func OpenDatabase(pathdatabase string) error {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	// Create first group if never group exist
+	err = CreateFirstGroup()
+	if err != nil {
+		log.Fatal("Error root group server not found")
+	}
 	return nil
 }

@@ -54,6 +54,24 @@ func (servers Servers) ConvertMap() (list map[uint]*Server) {
 	return
 }
 
+// Add Group Root
+func CreateFirstGroup() error {
+	var sg ServerGroup
+	ret := DB.First(&sg)
+
+	if ret.Error == gorm.ErrRecordNotFound {
+
+		// create racine group
+		sg.ID = 1
+		sg.Name = "General"
+
+		// Add Root$
+		tx := DB.Create(&sg)
+		return tx.Error
+	}
+	return ret.Error
+}
+
 // GetPathGroup
 func GetPathGroup(pathGroup string) (*ServerGroup, error) {
 	// Split Name
@@ -247,6 +265,7 @@ func GetServerGroupComposit() (ServerGroupComposit, error) {
 	getServerGroupCompositCreate(&serverGroupComposit,
 		mapGroupParentId,
 		mapServerByGroup)
+	fmt.Println("serverGroupComposit:", serverGroupComposit)
 	return serverGroupComposit, nil
 }
 
