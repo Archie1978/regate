@@ -107,7 +107,7 @@ func (processSSh *ProcessSsh) startSSh() {
 	host := fmt.Sprintf("%v:%v", processSSh.msgConnect.Ip, processSSh.msgConnect.Port)
 	processSSh.client, err = ssh.Dial("tcp", host, config)
 	if err != nil {
-		processSSh.chanelWebSocket <- MessageTerminal{Session: processSSh.numeroSession, Command: "Error", Msg: err}
+		processSSh.chanelWebSocket <- MessageTerminal{Session: processSSh.numeroSession, Command: "Error", Msg: err.Error()}
 		glog.Error("processDial to ", host, ":", err)
 
 		processSSh.chanelWebSocket <- MessageTerminal{Session: processSSh.numeroSession, Command: "End"}
@@ -117,7 +117,7 @@ func (processSSh *ProcessSsh) startSSh() {
 	// Create session for shell
 	processSSh.sessionShell, err = processSSh.client.NewSession()
 	if err != nil {
-		processSSh.chanelWebSocket <- MessageTerminal{Session: processSSh.numeroSession, Command: "Error", Msg: err}
+		processSSh.chanelWebSocket <- MessageTerminal{Session: processSSh.numeroSession, Command: "Error", Msg: err.Error()}
 		glog.Error("processSession:", err)
 
 		processSSh.client.Close()
@@ -134,7 +134,7 @@ func (processSSh *ProcessSsh) startSSh() {
 	// Create Pty
 	err = processSSh.sessionShell.RequestPty("linux", processSSh.Screen.Rows, processSSh.Screen.Cols, modes)
 	if err != nil {
-		processSSh.chanelWebSocket <- MessageTerminal{Session: processSSh.numeroSession, Command: "Error", Msg: err}
+		processSSh.chanelWebSocket <- MessageTerminal{Session: processSSh.numeroSession, Command: "Error", Msg: err.Error()}
 		glog.Error("processSession:", err)
 		processSSh.chanelWebSocket <- MessageTerminal{Session: processSSh.numeroSession, Command: "End"}
 		return
@@ -147,7 +147,7 @@ func (processSSh *ProcessSsh) startSSh() {
 
 		r, err := processSSh.sessionShell.StdoutPipe()
 		if err != nil {
-			processSSh.chanelWebSocket <- MessageTerminal{Session: processSSh.numeroSession, Command: "Error", Msg: err}
+			processSSh.chanelWebSocket <- MessageTerminal{Session: processSSh.numeroSession, Command: "Error", Msg: err.Error()}
 			glog.Error("processsessionShell.StdoutPipe:", err)
 			processSSh.chanelWebSocket <- MessageTerminal{Session: processSSh.numeroSession, Command: "End"}
 			return
@@ -165,7 +165,7 @@ func (processSSh *ProcessSsh) startSSh() {
 	}()
 
 	if err := processSSh.sessionShell.Shell(); err != nil {
-		processSSh.chanelWebSocket <- MessageTerminal{Session: processSSh.numeroSession, Command: "Error", Msg: err}
+		processSSh.chanelWebSocket <- MessageTerminal{Session: processSSh.numeroSession, Command: "Error", Msg: err.Error()}
 		glog.Error("processSSh.sessionShell:", processSSh.sessionShell.Stderr.(*bytes.Buffer).String())
 		return
 	}
