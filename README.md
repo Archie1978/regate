@@ -61,8 +61,10 @@ Version init
 Browser:
 * firefox 119.0 (64 bits)
 * Chromium 120.0 ( 64 bits)
+* Chrome 129.0.6668 (android)
 
 OS:
+* Linux Ubuntu 24.04 
 * Linux Ubuntu 22.04 
 * Linux Ubuntu 18.04 
 
@@ -70,14 +72,14 @@ OS:
 
 ## authentification flat ( standalone: default) When you started application, Regate starts the default WEB browser.
 {
-	"Listen": 42O3,
+	"Listen": 4203,
 	"Authentification":"flat:///",
 	"KeyCrypt": "L+wz1QjOUhTXDvflXXOFfw=="
 }
 
 ## authentification unsafe Application ( NOT RECOMMENDED )
 {
-	"Listen": 42O3,
+	"Listen": 4203,
 	"Authentification":"none:///",
 	"KeyCrypt": "L+wz1QjOUhTXDvflXXOFfw=="
 }
