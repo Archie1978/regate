@@ -1,0 +1,8 @@
+services:
+  regate-daemon:
+    image: regate-daemon
+    build: .
+    volumes:
+      - ./database.sqlite:/app/database.sqlite
+    ports:
+      - 4203:4203 
