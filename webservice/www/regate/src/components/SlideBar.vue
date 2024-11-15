@@ -168,15 +168,20 @@ export default {
 
     // Create menu into list
     updateMenu:function(rootDataMenu,arraydataWS){
+      if(arraydataWS){
+        console("Nothing group")
+        return
+      }
       var arraydataWSLength = arraydataWS.length;
       for (var i = 0; i < arraydataWSLength; i++) {
+        // Display group
         var data=arraydataWS[i];
         if(data.ServerGroupChildren){
           if(data.ServerGroupChildren.length){
             this.updateMenu(rootDataMenu,data.ServerGroupChildren);
           }
         }
-
+        // display serveur
         if(data.Servers){
           if(data.Servers.length){
             var arrayserverLength = data.Servers.length;
