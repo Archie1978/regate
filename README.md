@@ -71,19 +71,29 @@ OS:
 ## file "configuration.json"
 
 ## authentification flat ( standalone: default) When you started application, Regate starts the default WEB browser.
+```
 {
 	"Listen": 4203,
 	"Authentification":"flat:///",
 	"KeyCrypt": "L+wz1QjOUhTXDvflXXOFfw=="
 }
-
+```
 ## authentification unsafe Application ( NOT RECOMMENDED )
+```
 {
 	"Listen": 4203,
 	"Authentification":"none:///",
 	"KeyCrypt": "L+wz1QjOUhTXDvflXXOFfw=="
 }
+```
 Start regate with cmd/regate-standalone-user/regate-standalone-user unsafe
+
+## Installation of docker
+
+### From scratch
+```
+docker-compose up
+```
 
 
 ## Plan dev Next
