@@ -168,8 +168,8 @@ export default {
 
     // Create menu into list
     updateMenu:function(rootDataMenu,arraydataWS){
-      if(arraydataWS){
-        console("Nothing group")
+      if(!Array.isArray(arraydataWS)){
+        console.log("Nothing group")
         return
       }
       var arraydataWSLength = arraydataWS.length;
