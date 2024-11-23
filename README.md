@@ -37,6 +37,9 @@ SSH:
 * JsTerminal
 * WebSocket
 
+## Init subgit ( step 0)
+1. git submodule update --init --recursive
+
 ## Build ( step 1)
 1. Build vue code
 2. cd www/regate
@@ -92,6 +95,7 @@ Start regate with cmd/regate-standalone-user/regate-standalone-user unsafe
 
 ### From scratch
 ```
+git submodule update --init --recursive
 docker-compose up
 ```
 
