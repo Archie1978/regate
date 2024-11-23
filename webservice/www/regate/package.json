@@ -13,10 +13,10 @@
     "roboto-fontface": "*",
     "tiny-emitter": "^2.1.0",
     "vue": "^3.2.13",
-    "vue3-tabs-chrome": "^0.3.2",
+    "vue3-tabs-chrome": "^0.3.3",
     "vuetify": "^3.0.0-beta.0",
-    "webfontloader": "^1.0.0",
-    "xterm": "^5.1.0",
+    "webfontloader": "^1.6.28",
+    "xterm": "^5.3.0",
     "xterm-addon-web-links": "^0.9.0"
   },
   "devDependencies": {
