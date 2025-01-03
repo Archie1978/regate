@@ -55,6 +55,12 @@ SSH:
 1. cd cmd/regate-daemon/
 2. go build -a 
 
+## Build android 
+1. cd cmd/regate-android/
+2. fyne package -os android/amd64 -appID github.com.Archie1978.regate
+
+upgrade into studio simulator: "adb install regate_android.apk"
+
 
 ## Release
 Version: 0.3.0

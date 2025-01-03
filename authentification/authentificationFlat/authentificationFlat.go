@@ -10,6 +10,7 @@ import (
 	"net/url"
 	"os"
 	"os/user"
+	"runtime"
 	"time"
 
 	"bitbucket.org/avd/go-ipc/mmf"
@@ -153,12 +154,10 @@ func (authentificationFlat *AuthentificationFlat) getMemoryZone() (rwRegion *mmf
 	nameShare := "regate_" + u.Name + "_ontime"
 	obj, err := shm.NewMemoryObject(nameShare, os.O_CREATE|os.O_EXCL|os.O_RDWR, 0600)
 	if err != nil {
-		if err != nil {
-			obj, err = shm.NewMemoryObject(nameShare, os.O_RDWR, 0600)
-		}
-		if err != nil {
-			return nil, err
-		}
+		obj, err = shm.NewMemoryObject(nameShare, os.O_RDWR, 0600)
+	}
+	if err != nil {
+		return nil, err
 	}
 
 	if err := obj.Truncate(2048); err != nil {
@@ -169,14 +168,18 @@ func (authentificationFlat *AuthentificationFlat) getMemoryZone() (rwRegion *mmf
 	return mmf.NewMemoryRegion(obj, mmf.MEM_READWRITE, 0, 2018)
 }
 
-// engineGenerateCode: Generate Code into memorie share ( use goroutine )
+// engineGenerateCode: Generate Code into memory share ( use goroutine )
 func (authentificationFlat *AuthentificationFlat) engineGenerateCode() {
-	rwRegion, err := authentificationFlat.getMemoryZone()
 
-	if err != nil {
-		log.Fatal(err)
+	// Send code into share memories except android
+	var writer *mmf.MemoryRegionWriter
+	if runtime.GOOS != "android" {
+		rwRegion, err := authentificationFlat.getMemoryZone()
+		if err != nil {
+			log.Fatal(err)
+		}
+		writer = mmf.NewMemoryRegionWriter(rwRegion)
 	}
-	writer := mmf.NewMemoryRegionWriter(rwRegion)
 
 	authentificationFlat.CanalGenerate <- true
 	for {
@@ -190,6 +193,7 @@ func (authentificationFlat *AuthentificationFlat) engineGenerateCode() {
 		}
 
 		buffer := bytes.NewBufferString("")
+		var err error
 		authentificationFlat.CodeOld = authentificationFlat.Code
 		authentificationFlat.Code, err = password.Generate(64, 10, 10, false, false)
 
@@ -197,24 +201,39 @@ func (authentificationFlat *AuthentificationFlat) engineGenerateCode() {
 			authentificationFlat.Code = ""
 		}
 		ts := time.Now().Unix()
-		err = binary.Write(buffer, binary.LittleEndian, &ts)
-		if err != nil {
-			log.Fatal("Note found")
+
+		if runtime.GOOS != "android" {
+			err = binary.Write(buffer, binary.LittleEndian, &ts)
+			if err != nil {
+				log.Fatal("Note found")
+			}
+
+			written, err := buffer.Write([]byte(authentificationFlat.Code))
+			if written != len(authentificationFlat.Code) {
+				log.Fatal(err)
+			}
+
+			writer.WriteAt(buffer.Bytes(), 0)
 		}
-
-		written, err := buffer.Write([]byte(authentificationFlat.Code))
-		if written != len(authentificationFlat.Code) {
-			log.Fatal(err)
-		}
-
-		writer.WriteAt(buffer.Bytes(), 0)
-
 	}
 
 }
 
 // GetCode: GetCode get code into share memory or error with application not stated ( var ErrAppNotStarted )
 func (authentificationFlat *AuthentificationFlat) GetCode() (code string, err error) {
+	// Send code into share memories except android
+	if runtime.GOOS == "android" {
+		if authentificationFlat.Code == "" {
+			return "", ErrAppNotStarted
+		}
+		return authentificationFlat.Code, nil
+	}
+
+	if authentificationFlat.Code != "" {
+		return authentificationFlat.Code, nil
+	}
+
+	// get
 	rwRegion, err := authentificationFlat.getMemoryZone()
 
 	if err != nil {

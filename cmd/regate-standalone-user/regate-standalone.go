@@ -34,8 +34,6 @@ const (
 	name        = "regate-standalone"
 	description = "Regate: Webervice remote desktop via web browser"
 
-	// port which daemon should be listen
-	port = "localhost:8354"
 )
 
 // dependencies that are NOT required by the service, but might be used

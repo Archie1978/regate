@@ -38,6 +38,7 @@ func LoadConfiguration(path string) error {
 
 	// Add watcher
 	go func() {
+
 		// Refresh conf
 		watcher, err := fsnotify.NewWatcher()
 		if err != nil {
@@ -131,5 +132,35 @@ func loadConfiguration(path string) error {
 		return fmt.Errorf("KeyCrypt not configure into configuration.json")
 	}
 
+	return nil
+}
+
+// Load PasswordCrypte
+func SaveConfiguration(path string) error {
+
+	// Créez un nouveau fichier avec os.Create
+	file, err := os.Create(path)
+	if err != nil {
+		log.Fatalf("Erreur lors de la création du fichier : %v", err)
+	}
+	defer file.Close()
+
+	// Encodage des données en JSON
+	jsonData, err := json.MarshalIndent(ConfigurationGlobal, "", "  ")
+	if err != nil {
+		return err
+	}
+
+	// Écriture du JSON dans le fichier
+	_, err = file.Write(jsonData)
+	if err != nil {
+		return err
+	}
+
+	// Fermeture du fichier
+	err = file.Close()
+	if err != nil {
+		return err
+	}
 	return nil
 }
