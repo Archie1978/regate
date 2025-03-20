@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"os/user"
+	"path"
 	"strings"
 	"time"
 
@@ -33,8 +35,37 @@ func (configuration *Configuration) GetConnectURL() (url string) {
 	return "http://" + configuration.Listen
 }
 
-// Load PasswordCrypte
-func LoadConfiguration(path string) error {
+// Load Configuration By Path
+func LoadConfigurationSystem() error {
+
+	listFolderPath := []string{"configuration.json", "./configuration.json"}
+
+	// User configuration
+	user, err := user.Current()
+	if err == nil {
+		listFolderPath = append(listFolderPath, path.Join(user.HomeDir, "/.config/regate.json"))
+	}
+
+	// Create folder configuration
+	for _, folderPath := range listFolderPath {
+		err = LoadConfiguration(folderPath)
+		if err == nil {
+			log.Println("Le configuration selected: ", folderPath)
+			return nil
+		}
+	}
+
+	return fmt.Errorf("Configuration not found in: %s", strings.Join(listFolderPath, ","))
+}
+
+// Load Configuration
+func LoadConfiguration(pathConf string) error {
+
+	// Check existe
+	_, err := os.Stat(pathConf)
+	if err != nil {
+		return err
+	}
 
 	// Add watcher
 	go func() {
@@ -49,7 +80,7 @@ func LoadConfiguration(path string) error {
 		defer watcher.Close()
 
 		// Add watcher directory
-		err = watcher.Add(path)
+		err = watcher.Add(pathConf)
 		if err != nil {
 			log.Println("Notification add configuration file:", err)
 			log.Println("Notification add configuration disabled")
@@ -66,7 +97,7 @@ func LoadConfiguration(path string) error {
 
 				if event.Op&fsnotify.Remove == fsnotify.Remove {
 					// cas improble du coups backup
-					watcher.Remove(path)
+					watcher.Remove(pathConf)
 				}
 				if event.Op&fsnotify.Write == fsnotify.Write {
 
@@ -76,7 +107,7 @@ func LoadConfiguration(path string) error {
 						go func() {
 							<-time.After(time.Duration(5) * time.Second)
 							log.Println("Configuration modified: reload")
-							err := loadConfiguration(path)
+							err := loadConfiguration(pathConf)
 							if err != nil {
 								fmt.Println("Load configuration error", err)
 							}
@@ -95,23 +126,27 @@ func LoadConfiguration(path string) error {
 		}
 	}()
 
-	err := loadConfiguration(path)
+	err = loadConfiguration(pathConf)
 	return err
 }
 
-func loadConfiguration(path string) error {
+func loadConfiguration(pathConfiguration string) error {
+
 	// Open Json
-	jsonFile, err := os.Open(path)
+	jsonFile, err := os.Open(pathConfiguration)
 	if err != nil {
 		return err
 	}
 	defer jsonFile.Close()
 
+	// Get path configuration
+	pathParent := path.Dir(pathConfiguration)
+
 	// Décode flux
 	dec := json.NewDecoder(jsonFile)
 	err = dec.Decode(&ConfigurationGlobal)
 	if err != nil {
-		return fmt.Errorf("Error Load:%v", err)
+		return fmt.Errorf("error Load:%v", err)
 	}
 
 	// Authentification flat
@@ -121,7 +156,7 @@ func loadConfiguration(path string) error {
 
 	// Init default
 	if ConfigurationGlobal.DatabasePath == "" {
-		ConfigurationGlobal.DatabasePath = "database.sqlite"
+		ConfigurationGlobal.DatabasePath = path.Join(pathParent, "database.sqlite")
 	}
 
 	if ConfigurationGlobal.Listen == "" {

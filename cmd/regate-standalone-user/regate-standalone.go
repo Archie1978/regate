@@ -101,7 +101,7 @@ func (service *Service) Manage() (string, error) {
 	}
 
 	fmt.Println("Load configuration: configuration.json")
-	err := configuration.LoadConfiguration("configuration.json")
+	err := configuration.LoadConfigurationSystem()
 	if err != nil {
 		log.Fatal(err)
 	}
