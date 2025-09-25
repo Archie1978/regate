@@ -68,7 +68,7 @@ jobs:
             # "linux/arm64" # il faut faire du CGO
             # "darwin/amd64"
             # "darwin/arm64"
-            # "windows/amd64"
+            # "windows/amd64"
           )
 
           for platform in "${platforms[@]}"; do
