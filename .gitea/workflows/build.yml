@@ -1,0 +1,142 @@
+name: Build Linux Binary
+
+# Déclenche le workflow uniquement quand un tag est créé
+on:
+  push:
+    tags:
+      - 'v*'  # tous les tags qui commencent par "v", ex: v1.0, v1.1.2
+
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1 Checkout du repo
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # 2 Initialiser les submodules Git
+      - name: Update Git submodules
+        env:
+          URL_GIT_SUBMODULE: ${{ vars.URL_GIT_SUBMODULE }}
+        run: |
+          if [ -z "$URL_GIT_SUBMODULE" ]; then
+             git submodule update --init --recursive --remote
+          else
+            for sub in $(git config --file .gitmodules --get-regexp url | awk '{print $1}'); do
+              name=${sub#submodule.}   # supprime le préfixe "submodule."
+              name=${name%.url}         # supprime le suffixe ".url"
+              echo "Change submodule: $name"
+              git config submodule.$name.url $URL_GIT_SUBMODULE/$name
+            done
+            git submodule update --init --recursive
+          fi 
+
+
+      # 3 Installer Node.js pour le front
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+
+      # 4 Compiler le front
+      - name: Build Frontend
+        working-directory: webservice/www/regate
+        run: |
+          npm install
+          npm install xterm-addon-web-links
+          npm run build
+
+      # 5 Installer Go
+      - name: Setup Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: 1.22
+
+      # 6 Télécharger les dépendances Go
+      - name: Get Go dependencies
+        working-directory: cmd/regate-standalone-user
+        run: go get ./...
+
+      # 7 Compiler le binaire Linux
+      - name: Build binaries
+        working-directory: cmd/regate-standalone-user
+        run: |
+          platforms=(
+            "linux/amd64"
+            # "linux/arm64" # il faut faire du CGO
+            # "darwin/amd64"
+            # "darwin/arm64"
+            # "windows/amd64"
+          )
+
+          for platform in "${platforms[@]}"; do
+            GOOS=${platform%/*}
+            GOARCH=${platform#*/}
+            BIN_NAME="regate-${GOOS}-${GOARCH}"
+            if [ "$GOOS" = "windows" ]; then
+              BIN_NAME="$BIN_NAME.exe"
+            fi
+
+            echo "* Build $BIN_NAME"
+            env GOOS=$GOOS GOARCH=$GOARCH go build -a -o "$BIN_NAME"
+
+          done
+
+      # Signé les packages
+      - name: Import GPG key
+        shell: bash
+        run: |
+          env
+          if [ -n "${{ secrets.GPG_PRIVATE_KEY }}" ]; then
+            echo "${{ secrets.GPG_PRIVATE_KEY }}" | gpg --batch --import
+            echo "${{ secrets.GPG_PASSPHRASE }}" | gpg --batch --yes --passphrase-fd 0 --pinentry-mode loopback --sign-key {{ vars.EMAIL }}
+          fi
+
+      - name: Sign binaries
+        working-directory: cmd/regate-standalone-user
+        run: |
+          if [ -n "${{ secrets.GPG_PRIVATE_KEY }}" ]; then
+            for f in regate-*; do
+              gpg --batch --yes --pinentry-mode loopback --passphrase "${{ secrets.GPG_PASSPHRASE }}" \
+                 --output "$f.sig" --detach-sign "$f"
+            done
+          fi
+
+
+      # 8 Upload du binaire comme artifact
+      - name: Upload binary to Gitea release
+        env:
+          GITEA_TOKEN: ${{ secrets.APPLICATION_TOKEN }}
+          TAG: ${{ github.ref_name }}
+        run: | 
+        
+          GITEA_URL=$GITHUB_SERVER_URL
+          REPO=$GITHUB_REPOSITORY
+
+          # Crée la release si elle n'existe pas
+          echo "Publication du src de la version $TAG du repo: $"
+          curl -s -X POST \
+            -H "Content-Type: application/json" \
+            -H "Authorization: token $GITEA_TOKEN" \
+            -d "{\"tag_name\": \"$TAG\", \"target_commitish\": \"$TAG\", \"name\": \"$TAG\", \"body\": \"Automated CI build\"}" \
+            $GITEA_URL/api/v1/repos/$REPO/releases || true
+          
+          # Vérifier si la release existe
+          RELEASE_ID=$(curl -s \
+            -H "Authorization: token $GITEA_TOKEN" \
+            $GITEA_URL/api/v1/repos/$REPO/releases/tags/$TAG | jq -r .id)
+            
+
+          # Upload du binaire
+          echo "Publication du binaire de la version:$TAG version realise_ID:$RELEASE_ID"
+          for f in cmd/regate-standalone-user/regate-*; do
+            echo "➡️ Upload $f"
+            curl -s -X POST \
+              -H "Authorization: token $GITEA_TOKEN" \
+              -F "attachment=@$f" \
+              $GITEA_URL/api/v1/repos/$REPO/releases/$RELEASE_ID/assets
+          done
+
+
